@@ -1,0 +1,25 @@
+﻿# 환경변수 & 보안파일
+server/.env
+server/cookies.txt
+
+# Python 캐시
+server/__pycache__/
+server/routers/__pycache__/
+server/services/__pycache__/
+__pycache__/
+*.pyc
+
+# 임시 영상 파일
+server/test_video*
+server/*.webm
+server/*.mp4
+
+# Node / React
+node_modules/
+web/node_modules/
+web/build/
+web/.env
+
+# Flutter
+mobile/.dart_tool/
+mobile/build/
