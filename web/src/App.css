@@ -1,0 +1,67 @@
+/* ── App.css - VibeView ───────────────────────────────── */
+
+/* placeholder 색상 */
+input::placeholder {
+  color: #2a3a55;
+  opacity: 1; /* Firefox 기본값 override */
+}
+
+/* ── 버튼 공통 hover (transition을 기본 상태에 선언해야 mouse-out도 부드러움) ── */
+button {
+  transition: opacity 0.15s ease, transform 0.15s ease;
+}
+
+button:hover:not(:disabled) {
+  opacity: 0.85;
+  transform: translateY(-1px);
+}
+
+button:active:not(:disabled) {
+  transform: translateY(0px);
+  opacity: 1;
+}
+
+/* ── input focus ring 제거 (onFocus에서 border-color로 처리) ── */
+input:focus {
+  outline: none;
+}
+
+/* ── 카드 hover 효과 ──────────────────────────────────── */
+.card-hover {
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.card-hover:hover {
+  border-color: #2a3a55 !important;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.3);
+}
+
+/* ── 스크롤 가능한 텍스트 박스 ──────────────────────────── */
+.scrollable-text {
+  scrollbar-width: thin;
+  scrollbar-color: #1e2d45 transparent;
+}
+
+.scrollable-text::-webkit-scrollbar {
+  width: 3px;
+}
+
+.scrollable-text::-webkit-scrollbar-thumb {
+  background: #1e2d45;
+  border-radius: 2px;
+}
+
+/* ── 애니메이션 ───────────────────────────────────────── */
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.5; }
+}

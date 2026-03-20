@@ -16,6 +16,24 @@
 > 4. **추측으로 코드를 작성하지 않는다**: 동작 여부가 불확실한 코드는 "확인이 필요합니다"라고 먼저 말하고 검증 방법을 제시한다.
 > 5. **파일 전달 시 전체 코드 제공**: 일부만 수정하라고 할 때는 변경된 부분을 명확히 표시하고, 전체 파일이 필요한 경우 전체를 제공한다.
 > 6. **컨텍스트 초과 전 CONTEXT.md 업데이트**: 대화가 길어지면 반드시 최신 상태를 반영한 CONTEXT.md를 제공한다.
+> 7. **백엔드 코드 확인 요청**: 프론트엔드에서 백엔드 API를 호출하는 코드를 작성하기 전에, 반드시 해당 라우터 파일(`routers/*.py`)의 실제 내용을 확인한 후 작성한다. 확인 전에 추측으로 작성하지 않는다.
+> 8. **Pydantic 스키마 확인 후 요청 형식 결정**: API 요청/응답 형식은 반드시 실제 Pydantic 모델을 확인한 후 맞춰서 작성한다.
+
+---
+
+## 📋 코드 정확성을 위해 Claude가 요청할 사항
+
+> 새 기능 개발 시 Claude가 아래 파일들을 보여달라고 요청할 수 있습니다.
+> 요청받으면 `type 파일경로` 명령어로 내용을 캡처해서 전달해주세요.
+
+| 상황 | Claude가 요청할 파일 | 명령어 |
+|------|------|------|
+| 새 API 연동 시 | 해당 라우터 파일 | `type C:\dev\vibeview\server\routers\*.py` |
+| 서비스 로직 수정 시 | 해당 서비스 파일 | `type C:\dev\vibeview\server\services\*.py` |
+| Flutter 앱 개발 시 | pubspec.yaml | `type C:\dev\vibeview\mobile\pubspec.yaml` |
+| DB 연동 시 | main.py 전체 | `type C:\dev\vibeview\server\main.py` |
+| 오류 발생 시 | 백엔드 터미널 에러 로그 | uvicorn 실행 터미널 스크린샷 |
+| React 빌드 오류 시 | 브라우저 콘솔 에러 | F12 → Console 탭 스크린샷 |
 
 ---
 
@@ -86,6 +104,12 @@ cd C:\dev\vibeview\server
 uvicorn main:app --reload --port 8000
 ```
 
+### React 웹 대시보드 실행 방법
+```bash
+cd C:\dev\vibeview\web
+npm start
+```
+
 ### API 문서 확인
 ```
 http://localhost:8000/docs
@@ -130,7 +154,11 @@ C:\dev\vibeview\
 │       ├── scene_analyzer.py      ⬜ 미구현
 │       ├── fusion_engine.py       ⬜ 미구현
 │       └── viral_predictor.py     ⬜ 미구현
-├── web\                           ⬜ 미구현
+├── web\                           ✅ 진행 중
+│   └── src\
+│       ├── App.js                 ✅ 완료 (감정 대시보드 UI)
+│       ├── App.css                ✅ 완료
+│       └── index.css              ✅ 완료
 ├── mobile\                        ⬜ 미구현
 ├── README.md                      ✅ 완료
 └── CONTEXT.md                     ✅ 이 파일
@@ -187,6 +215,11 @@ pydantic-settings==2.5.2
 | GET | /api/trend | ⬜ 기본 구조 | 감정 트렌드 |
 | GET | /api/user | ⬜ 기본 구조 | 사용자 정보 |
 
+### /api/analyze 요청 형식
+```json
+{ "url": "https://youtube.com/shorts/..." }
+```
+
 ### /api/analyze 응답 구조 (실제 테스트 확인)
 ```json
 {
@@ -211,6 +244,48 @@ pydantic-settings==2.5.2
 }
 ```
 
+### /api/coach 요청 형식 (Pydantic 모델 확인 완료)
+```json
+{
+  "video_id": "string",
+  "emotion_data": {
+    "face_summary": {...},
+    "audio_summary": {...},
+    "video_info": {...}
+  },
+  "question": "string (optional, None 가능)"
+}
+```
+
+### /api/coach 응답 형식
+```json
+{ "feedback": "string" }
+```
+
+---
+
+## React 웹 대시보드 현황
+
+### 설치된 패키지
+```
+react, recharts, axios
+```
+
+### 구현된 기능
+- YouTube URL 입력 → 백엔드 `/api/analyze` 호출
+- 영상 기본 정보 표시 (duration, fps, resolution, frames)
+- 얼굴 감정 분포 바 차트 + peak emotion 표시
+- 음성 감정 (dominant, tempo, language, transcript) 표시
+- 초 단위 감정 타임라인 LineChart (Recharts)
+- Gemini AI 코치 피드백 (`/api/coach` 연동)
+- 로딩 스피너, 에러 메시지 처리
+- 반응형 레이아웃 (768px, 480px 미디어쿼리)
+- 다크 사이버 테마 (Space Mono + Syne 폰트)
+
+### CORS 설정 필요 여부
+- 현재 로컬 개발 환경에서는 문제없음
+- 배포 시 백엔드 `main.py`에 CORS 설정 추가 필요
+
 ---
 
 ## 작업 현황
@@ -225,9 +300,11 @@ pydantic-settings==2.5.2
 - [x] 얼굴 감정 분석 (MediaPipe FaceMesh)
 - [x] 음성 감정 분석 (Whisper base + librosa)
 - [x] 영상 분석 API 완성 (/api/analyze) — 200 응답 확인
+- [x] React 웹 대시보드 기본 UI 완성 — 실제 분석 동작 확인
+- [x] .gitignore 설정 완료
+- [ ] React AI 코치 버튼 동작 최종 확인 (coach.py 스키마 맞춤 완료, 테스트 필요)
 - [ ] scene_analyzer.py (YOLOv8 + CLIP)
 - [ ] fusion_engine.py (멀티모달 융합)
-- [ ] 웹 대시보드 (React)
 - [ ] Flutter 모바일 앱
 - [ ] YouTube Data API 연동
 - [ ] 바이럴 점수 ML 모델
@@ -240,15 +317,15 @@ pydantic-settings==2.5.2
 1. YouTube Shorts URL 입력 → 영상 다운로드 ✅
 2. 얼굴 + 음성 감정 분석 ✅
 3. 초 단위 감정 타임라인 생성 ✅
-4. Gemini AI 코치 피드백 ✅
-5. 웹 대시보드 기본 UI ⬜
+4. Gemini AI 코치 피드백 ✅ (백엔드), ⬜ (프론트 최종 확인 필요)
+5. 웹 대시보드 기본 UI ✅
 6. Flutter 앱 기본 화면 ⬜
 
 ---
 
 ## 다음 작업 순서 (중간 발표 우선순위)
 
-1. **웹 대시보드** - React 기본 UI (감정 타임라인 차트, URL 입력)
+1. **AI 코치 버튼 최종 확인** — 수정된 App.js 적용 후 동작 테스트
 2. **Flutter 앱** - 기본 화면 (URL 입력 + 결과 표시)
 3. **scene_analyzer.py** - YOLOv8 + CLIP
 4. **fusion_engine.py** - 멀티모달 감정 융합
@@ -262,8 +339,8 @@ pydantic-settings==2.5.2
 ```
 이 파일은 내가 개발 중인 VibeView 졸업작품이야.
 중간 발표가 5월이라 시간이 없어.
-다음 작업인 React 웹 대시보드부터 이어서 개발해줘.
-코드는 항상 검토 후 정확한 것만 알려줘.
+이어서 개발해줘.
+코드 작성 전에 관련 백엔드 파일 확인이 필요하면 먼저 요청해줘.
 새 채팅창도 컨텍스트가 넘어가기 전에 이 CONTEXT.md를 업데이트해서 줘.
 ```
 
@@ -272,6 +349,7 @@ pydantic-settings==2.5.2
 ## 주의사항
 
 - 코드 전달 전 반드시 정확성 검토 후 전달
+- **새 API 연동 전 반드시 라우터 파일 내용 확인 요청할 것**
 - Gemini 모델명: `gemini-2.5-flash` (다른 버전 사용 금지)
 - pip 대신 항상 `pip install` 사용 (Python 3.11 경로: C:\Python311)
 - 서버는 `uvicorn main:app --reload --port 8000` 으로 실행
