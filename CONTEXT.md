@@ -18,6 +18,7 @@
 > 6. **컨텍스트 초과 전 CONTEXT.md 업데이트**: 대화가 길어지면 반드시 최신 상태를 반영한 CONTEXT.md를 제공한다.
 > 7. **백엔드 코드 확인 요청**: 프론트엔드에서 백엔드 API를 호출하는 코드를 작성하기 전에, 반드시 해당 라우터 파일(`routers/*.py`)의 실제 내용을 확인한 후 작성한다. 확인 전에 추측으로 작성하지 않는다.
 > 8. **Pydantic 스키마 확인 후 요청 형식 결정**: API 요청/응답 형식은 반드시 실제 Pydantic 모델을 확인한 후 맞춰서 작성한다.
+> 9. **로드맵 순서 준수**: 아래 개발 로드맵 순서대로 진행한다. 새 채팅창이 시작되면 현재 완료된 단계를 확인하고 다음 단계를 안내한다.
 
 ---
 
@@ -100,12 +101,11 @@ C:\dev\vibeview\server\.env
 
 ### 서버 실행 방법
 ```bash
+# 터미널 1 - 백엔드
 cd C:\dev\vibeview\server
 uvicorn main:app --reload --port 8000
-```
 
-### React 웹 대시보드 실행 방법
-```bash
+# 터미널 2 - 프론트엔드
 cd C:\dev\vibeview\web
 npm start
 ```
@@ -120,12 +120,11 @@ http://localhost:8000/docs
 - JS 런타임: Node.js v25.8.1
 - **Python API 옵션 (검증 완료):**
   ```python
-  "js_runtimes": {"node": {}},       # 딕셔너리 형식 (문자열 리스트 아님)
-  "remote_components": {"ejs:github"}, # set 형식 (문자열 아님)
+  "js_runtimes": {"node": {}},
+  "remote_components": {"ejs:github"},
   "cookiefile": "C:\\dev\\vibeview\\server\\cookies.txt",
-  "format": "best[height<=720]/best",  # 복잡한 포맷 조건 사용 금지
+  "format": "best[height<=720]/best",
   ```
-- 추가 패키지: `yt-dlp` (최신버전), `yt-dlp-ejs` (pip 설치됨)
 - **주의**: `extractor_args`로 js_runtimes 지정하면 동작 안 함. 반드시 위 형식 사용
 
 ---
@@ -137,71 +136,31 @@ C:\dev\vibeview\
 ├── server\
 │   ├── main.py                    ✅ 완료
 │   ├── requirements.txt           ✅ 완료
-│   ├── cookies.txt                ✅ 완료 (Chrome YouTube 쿠키, 공유 금지)
+│   ├── cookies.txt                ✅ 완료 (공유 금지)
 │   ├── .env                       ✅ 완료 (API 키 설정됨)
 │   ├── routers\
 │   │   ├── __init__.py            ✅ 완료
-│   │   ├── analyze.py             ✅ 완료 (face + audio 분석 연결)
-│   │   ├── coach.py               ✅ 완료 (Gemini API 연동)
+│   │   ├── analyze.py             ✅ 완료
+│   │   ├── coach.py               ✅ 완료
 │   │   ├── trend.py               ✅ 완료 (기본 구조)
 │   │   └── user.py                ✅ 완료 (기본 구조)
 │   └── services\
-│       ├── gemini_coach.py        ✅ 완료 (Gemini API 연동, 테스트 성공)
-│       ├── video_processor.py     ✅ 완료 (yt-dlp + OpenCV + ffmpeg, 테스트 성공)
-│       ├── face_analyzer.py       ✅ 완료 (MediaPipe FaceMesh)
-│       ├── audio_analyzer.py      ✅ 완료 (Whisper base + librosa)
+│       ├── gemini_coach.py        ✅ 완료
+│       ├── video_processor.py     ✅ 완료
+│       ├── face_analyzer.py       ✅ 완료
+│       ├── audio_analyzer.py      ✅ 완료
 │       ├── animal_analyzer.py     ⬜ 미구현
 │       ├── scene_analyzer.py      ⬜ 미구현
 │       ├── fusion_engine.py       ⬜ 미구현
 │       └── viral_predictor.py     ⬜ 미구현
-├── web\                           ✅ 진행 중
+├── web\                           ✅ 완료 (React 대시보드)
 │   └── src\
-│       ├── App.js                 ✅ 완료 (감정 대시보드 UI)
+│       ├── App.js                 ✅ 완료
 │       ├── App.css                ✅ 완료
 │       └── index.css              ✅ 완료
 ├── mobile\                        ⬜ 미구현
 ├── README.md                      ✅ 완료
 └── CONTEXT.md                     ✅ 이 파일
-```
-
----
-
-## requirements.txt 내용
-
-```
-# Web Framework
-fastapi==0.115.0
-uvicorn==0.30.6
-
-# HTTP
-httpx==0.27.2
-python-multipart==0.0.9
-
-# AI / ML
-google-generativeai==0.8.3
-torch==2.4.1
-torchvision==0.19.1
-transformers==4.45.1
-ultralytics==8.2.103
-mediapipe==0.10.14
-librosa==0.10.2
-opencv-python==4.10.0.84
-Pillow==10.4.0
-openai-whisper
-
-# Video Processing
-yt-dlp
-yt-dlp-ejs
-
-# Database
-sqlalchemy==2.0.35
-asyncpg==0.29.0
-redis==5.1.1
-
-# Utils
-python-dotenv==1.0.1
-pydantic==2.9.2
-pydantic-settings==2.5.2
 ```
 
 ---
@@ -215,121 +174,103 @@ pydantic-settings==2.5.2
 | GET | /api/trend | ⬜ 기본 구조 | 감정 트렌드 |
 | GET | /api/user | ⬜ 기본 구조 | 사용자 정보 |
 
-### /api/analyze 요청 형식
+### /api/analyze 요청
 ```json
 { "url": "https://youtube.com/shorts/..." }
 ```
 
-### /api/analyze 응답 구조 (실제 테스트 확인)
-```json
-{
-  "status": "success",
-  "video_info": {"duration": float, "fps": float, "width": int, "height": int, "total_frames": int},
-  "face_summary": {
-    "emotion_distribution": {"neutral": float, ...},
-    "avg_valence": float,
-    "peak_emotion": {"timestamp": float, "emotion": str, "valence": float}
-  },
-  "audio_summary": {
-    "avg_valence": float,
-    "dominant_emotion": str,
-    "tempo": float,
-    "language": str,
-    "full_text": str
-  },
-  "emotion_timeline": [
-    {"timestamp": float, "face_emotion": str, "face_valence": float,
-     "face_count": int, "audio_emotion": str, "audio_valence": float, "audio_energy": float}
-  ]
-}
-```
-
-### /api/coach 요청 형식 (Pydantic 모델 확인 완료)
+### /api/coach 요청 (Pydantic 모델 확인 완료)
 ```json
 {
   "video_id": "string",
-  "emotion_data": {
-    "face_summary": {...},
-    "audio_summary": {...},
-    "video_info": {...}
-  },
-  "question": "string (optional, None 가능)"
+  "emotion_data": { "face_summary": {}, "audio_summary": {}, "video_info": {} },
+  "question": "string (optional)"
 }
 ```
 
-### /api/coach 응답 형식
+### /api/coach 응답
 ```json
 { "feedback": "string" }
 ```
 
 ---
 
-## React 웹 대시보드 현황
+## 🗺️ 개발 로드맵 (Claude가 이 순서대로 진행합니다)
 
-### 설치된 패키지
-```
-react, recharts, axios
-```
+> 새 채팅창 시작 시 Claude는 아래 단계 중 현재 위치를 확인하고 다음 단계를 안내합니다.
+> 각 단계 완료 시 ✅로 표시하고 CONTEXT.md를 업데이트합니다.
 
-### 구현된 기능
-- YouTube URL 입력 → 백엔드 `/api/analyze` 호출
-- 영상 기본 정보 표시 (duration, fps, resolution, frames)
-- 얼굴 감정 분포 바 차트 + peak emotion 표시
-- 음성 감정 (dominant, tempo, language, transcript) 표시
-- 초 단위 감정 타임라인 LineChart (Recharts)
-- Gemini AI 코치 피드백 (`/api/coach` 연동)
-- 로딩 스피너, 에러 메시지 처리
-- 반응형 레이아웃 (768px, 480px 미디어쿼리)
-- 다크 사이버 테마 (Space Mono + Syne 폰트)
+### 🟢 Phase 1 - 중간 발표 필수 (~ 2026년 5월)
 
-### CORS 설정 필요 여부
-- 현재 로컬 개발 환경에서는 문제없음
-- 배포 시 백엔드 `main.py`에 CORS 설정 추가 필요
+| 단계 | 작업 | 상태 | 비고 |
+|------|------|------|------|
+| 1-1 | FastAPI 백엔드 기본 서버 | ✅ 완료 | |
+| 1-2 | 영상 처리 (yt-dlp + OpenCV) | ✅ 완료 | |
+| 1-3 | 얼굴 감정 분석 (MediaPipe) | ✅ 완료 | |
+| 1-4 | 음성 감정 분석 (Whisper + librosa) | ✅ 완료 | |
+| 1-5 | Gemini AI 코치 연동 | ✅ 완료 | |
+| 1-6 | React 웹 대시보드 | ✅ 완료 | 감정 타임라인 + AI 코치 UI |
+| 1-7 | Flutter 앱 기본 화면 | ⬜ **다음 작업** | URL 입력 + 결과 표시 |
+| 1-8 | 백엔드 CORS 설정 | ⬜ 1-7 이후 | Flutter 연동을 위해 필요 |
+
+### 🟡 Phase 2 - 중간~최종 발표 (2026년 5월~9월)
+
+| 단계 | 작업 | 상태 | 비고 |
+|------|------|------|------|
+| 2-1 | scene_analyzer.py | ⬜ | YOLOv8 + CLIP 장면 분석 |
+| 2-2 | fusion_engine.py | ⬜ | 얼굴+음성+장면 멀티모달 융합 |
+| 2-3 | viral_predictor.py | ⬜ | 바이럴 점수 ML 예측 모델 |
+| 2-4 | YouTube Data API 연동 | ⬜ | 실제 조회수 데이터 연동 |
+| 2-5 | 감정 트렌드 API | ⬜ | /api/trend 구현 |
+| 2-6 | PostgreSQL DB 연동 | ⬜ | 분석 결과 저장 |
+
+### 🔵 Phase 3 - 최종 발표 준비 (2026년 8월~9월)
+
+| 단계 | 작업 | 상태 | 비고 |
+|------|------|------|------|
+| 3-1 | Docker 컨테이너화 | ⬜ | 백엔드 + 프론트엔드 |
+| 3-2 | AWS EC2 배포 | ⬜ | 실제 서버 배포 |
+| 3-3 | Flutter 앱 완성 | ⬜ | 전체 기능 탑재 |
+| 3-4 | 발표 자료 준비 | ⬜ | 데모 시나리오 포함 |
 
 ---
 
-## 작업 현황
+### 📌 다음 작업: 1-7 Flutter 앱 기본 화면
 
-- [x] 개발 환경 세팅 (Python 3.11, Flutter, Node.js, ffmpeg)
-- [x] GitHub 저장소 연결 (VibeView, master 브랜치)
-- [x] 폴더 구조 생성
-- [x] FastAPI 기본 서버 구현 및 실행 확인
-- [x] Gemini API 연동 및 테스트 성공 (gemini-2.5-flash)
-- [x] AI 코치 API 엔드포인트 구현 (/api/coach)
-- [x] 영상 처리 (yt-dlp + OpenCV + ffmpeg) — 테스트 성공
-- [x] 얼굴 감정 분석 (MediaPipe FaceMesh)
-- [x] 음성 감정 분석 (Whisper base + librosa)
-- [x] 영상 분석 API 완성 (/api/analyze) — 200 응답 확인
-- [x] React 웹 대시보드 기본 UI 완성 — 실제 분석 동작 확인
-- [x] .gitignore 설정 완료
-- [ ] React AI 코치 버튼 동작 최종 확인 (coach.py 스키마 맞춤 완료, 테스트 필요)
-- [ ] scene_analyzer.py (YOLOv8 + CLIP)
-- [ ] fusion_engine.py (멀티모달 융합)
-- [ ] Flutter 모바일 앱
+**작업 내용:**
+1. `C:\dev\vibeview\mobile` Flutter 프로젝트 생성
+2. URL 입력 화면 구현
+3. 백엔드 `/api/analyze` 호출
+4. 분석 결과 표시 화면 구현
+5. AI 코치 버튼 + 피드백 표시
+
+**시작 전 준비:**
+- Flutter 에뮬레이터 또는 실제 기기 연결 확인
+- 백엔드 서버 실행 상태 확인 (localhost:8000)
+
+---
+
+## 작업 현황 체크리스트
+
+- [x] 개발 환경 세팅
+- [x] GitHub 저장소 연결
+- [x] FastAPI 기본 서버
+- [x] Gemini API 연동
+- [x] 영상 처리 파이프라인
+- [x] 얼굴 감정 분석
+- [x] 음성 감정 분석
+- [x] /api/analyze 완성
+- [x] /api/coach 완성
+- [x] React 웹 대시보드 완성
+- [x] .gitignore 설정
+- [ ] Flutter 앱 기본 화면 ← **현재 여기**
+- [ ] 백엔드 CORS 설정
+- [ ] scene_analyzer.py
+- [ ] fusion_engine.py
+- [ ] viral_predictor.py
 - [ ] YouTube Data API 연동
-- [ ] 바이럴 점수 ML 모델
 - [ ] 감정 트렌드 API
-
----
-
-## 중간 발표까지 완성 목표 기능 (2026년 5월)
-
-1. YouTube Shorts URL 입력 → 영상 다운로드 ✅
-2. 얼굴 + 음성 감정 분석 ✅
-3. 초 단위 감정 타임라인 생성 ✅
-4. Gemini AI 코치 피드백 ✅ (백엔드), ⬜ (프론트 최종 확인 필요)
-5. 웹 대시보드 기본 UI ✅
-6. Flutter 앱 기본 화면 ⬜
-
----
-
-## 다음 작업 순서 (중간 발표 우선순위)
-
-1. **AI 코치 버튼 최종 확인** — 수정된 App.js 적용 후 동작 테스트
-2. **Flutter 앱** - 기본 화면 (URL 입력 + 결과 표시)
-3. **scene_analyzer.py** - YOLOv8 + CLIP
-4. **fusion_engine.py** - 멀티모달 감정 융합
-5. **viral_predictor.py** - 바이럴 점수 예측
+- [ ] Docker + AWS 배포
 
 ---
 
@@ -338,8 +279,7 @@ react, recharts, axios
 이 파일을 업로드한 후:
 ```
 이 파일은 내가 개발 중인 VibeView 졸업작품이야.
-중간 발표가 5월이라 시간이 없어.
-이어서 개발해줘.
+로드맵 순서대로 이어서 개발해줘.
 코드 작성 전에 관련 백엔드 파일 확인이 필요하면 먼저 요청해줘.
 새 채팅창도 컨텍스트가 넘어가기 전에 이 CONTEXT.md를 업데이트해서 줘.
 ```
