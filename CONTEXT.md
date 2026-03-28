@@ -156,7 +156,44 @@ npm start
 flutter emulators --launch Medium_Phone
 cd C:\dev\vibeview\mobile
 flutter run
+
+터미널 4 - 자동 데이터 수집 (백엔드 실행 후):
+cd C:\dev\vibeview\server
+C:\Python311\python.exe auto_collect.py --count 20
 ```
+
+### 자동 데이터 수집 방법 (머신러닝 데이터 축적용)
+
+**목적**: 바이럴 예측 머신러닝 학습을 위한 YouTube Shorts 분석 데이터 자동 수집
+
+**노트북 켤 때마다 하는 순서:**
+
+1. 터미널 1에서 백엔드 먼저 실행 (위 참고)
+2. 백엔드가 완전히 뜬 후 터미널 2에서 수집 실행:
+
+```
+cd C:\dev\vibeview\server
+C:\Python311\python.exe auto_collect.py --count 20
+```
+
+**옵션:**
+```
+# 한국 인기 Shorts 20개 수집 (기본)
+C:\Python311\python.exe auto_collect.py --count 20
+
+# 미국 인기 Shorts 30개 수집
+C:\Python311\python.exe auto_collect.py --count 30 --region US
+
+# 영상 간 대기 시간 10초로 설정
+C:\Python311\python.exe auto_collect.py --count 20 --delay 10
+```
+
+**주의사항:**
+- 백엔드(uvicorn) 실행 중이어야 동작
+- 이미 분석된 영상은 자동 스킵 (중복 없음)
+- 노트북 꺼지면 중단되지만 데이터 손상 없음 (완료된 것만 DB 저장)
+- 하루 20~50개씩 실행하면 한 달에 600~1,500개 데이터 축적
+- 보안 문제 없음 (YouTube 공개 영상만 수집, 모든 데이터는 로컬 DB에만 저장)
 
 ### 기타 설정
 - API 문서: http://localhost:8000/docs
@@ -179,37 +216,41 @@ flutter run
 ```
 C:\dev\vibeview\
 ├── server\
-│   ├── main.py                    완료 (CORS + DB 테이블 자동 생성)
+│   ├── main.py                    완료 (CORS + DB 테이블 자동 생성 + 정적 파일 서빙)
 │   ├── database.py                완료 (SQLAlchemy DB 연결)
 │   ├── models.py                  완료 (AnalysisResult 테이블 정의)
 │   ├── requirements.txt           완료
 │   ├── cookies.txt                완료 (공유 금지)
 │   ├── .env                       완료 (API 키 + DB URL 설정됨)
+│   ├── auto_collect.py            완료 (YouTube Shorts 자동 수집 스크립트)
 │   ├── routers\
 │   │   ├── __init__.py            완료
 │   │   ├── analyze.py             완료 (전체 파이프라인 + DB 저장)
 │   │   ├── coach.py               완료
 │   │   ├── trend.py               완료 (/api/trend 구현)
 │   │   └── user.py                완료 (기본 구조)
-│   └── services\
-│       ├── gemini_coach.py        완료
-│       ├── video_processor.py     완료
-│       ├── face_analyzer.py       완료
-│       ├── audio_analyzer.py      완료
-│       ├── scene_analyzer.py      완료 (YOLOv8 + CLIP)
-│       ├── fusion_engine.py       완료 (멀티모달 융합)
-│       ├── viral_predictor.py     완료 (바이럴 점수 예측)
-│       └── youtube_service.py     완료 (YouTube Data API v3)
+│   ├── services\
+│   │   ├── gemini_coach.py        완료
+│   │   ├── video_processor.py     완료 (프레임 영구 저장 포함)
+│   │   ├── face_analyzer.py       완료 (FER CNN 딥러닝 교체)
+│   │   ├── audio_analyzer.py      완료
+│   │   ├── scene_analyzer.py      완료 (YOLOv8 + CLIP)
+│   │   ├── fusion_engine.py       완료 (멀티모달 융합)
+│   │   ├── viral_predictor.py     완료 (바이럴 점수 예측)
+│   │   └── youtube_service.py     완료 (YouTube Data API v3)
+│   └── static\
+│       └── frames\                완료 (분석된 프레임 이미지 영구 저장)
+│           └── {video_id}\
 ├── web\                           완료 (React 대시보드 고도화 완료)
 │   └── src\
-│       ├── App.js                 완료 (YouTube통계+장면+융합+바이럴+트렌드탭)
+│       ├── App.js                 완료 (YouTube통계+장면+융합+바이럴+트렌드탭+장면검증)
 │       ├── App.css                완료
 │       └── index.css              완료
 ├── mobile\                        완료 (Flutter 앱 고도화 완료)
 │   ├── lib\
-│   │   └── main.dart              완료 (YouTube통계+장면+융합+바이럴+트렌드화면)
+│   │   └── main.dart              완료 (YouTube통계+장면+융합+바이럴+트렌드+장면검증)
 │   └── pubspec.yaml               완료 (http 패키지 포함)
-├── README.md                      완료
+├── README.md                      완료 (Mermaid 블록도 포함)
 └── CONTEXT.md                     이 파일
 ```
 
@@ -399,17 +440,19 @@ dependencies:
 | 2-6 | PostgreSQL DB 연동 | 완료 |
 | 2-7 | React 대시보드 고도화 | 완료 |
 | 2-8 | Flutter 앱 고도화 | 완료 |
+| 2-9 | 타임라인 장면 검증 기능 | 완료 |
+| 2-10 | FER CNN 얼굴 감정 분석 교체 | 완료 |
+| 2-11 | YouTube Shorts 자동 수집 스크립트 | 완료 |
+| 2-12 | README.md (Mermaid 블록도) | 완료 |
 
 ### Phase 3 - 최종 발표 준비 (2026년 8월~9월)
 
 | 단계 | 작업 | 상태 |
 |------|------|------|
-| 3-1 | 캐릭터 PNG 교체 | 미완료 [다음 작업] |
-| 3-2 | 캐릭터 4종 추가 | 미완료 |
-| 3-3 | Docker 컨테이너화 | 미완료 |
-| 3-4 | AWS EC2 배포 | 미완료 |
-| 3-5 | Flutter 앱 완성 | 미완료 |
-| 3-6 | 발표 자료 준비 | 미완료 |
+| 3-1 | Docker 컨테이너화 | 미완료 [다음 작업] |
+| 3-2 | AWS EC2 배포 | 미완료 |
+| 3-3 | 바이럴 예측 머신러닝 학습 | 미완료 (데이터 500개+ 필요) |
+| 3-4 | 최종 발표 자료 준비 | 미완료 |
 
 ---
 
@@ -436,10 +479,14 @@ dependencies:
 - [x] PostgreSQL DB 연동 (분석 결과 자동 저장)
 - [x] React 대시보드 고도화
 - [x] Flutter 앱 고도화
-- [ ] 캐릭터 PNG 교체  <-- 현재 여기
-- [ ] 캐릭터 4종 랜덤 등장
-- [ ] Docker + AWS 배포
-- [ ] 발표 자료 준비
+- [x] 타임라인 장면 검증 기능 (React 웹 + Flutter 앱)
+- [x] 프레임 이미지 영구 저장 + 정적 파일 서빙
+- [x] FER CNN 기반 얼굴 감정 분석 교체 (MediaPipe → FER)
+- [x] YouTube Shorts 자동 수집 스크립트 (auto_collect.py)
+- [x] README.md (Mermaid 블록도 포함)
+- [ ] Docker 컨테이너화  <-- 현재 여기
+- [ ] AWS EC2 배포
+- [ ] 바이럴 예측 머신러닝 학습 (데이터 500개 이상 축적 후)
 
 ---
 
@@ -460,3 +507,18 @@ dependencies:
 - CONTEXT.md 전달 전 반드시 체크리스트 6개 항목 모두 검증 후 전달
 - Flutter: CustomPainter 내부 전역 k* 상수 직접 사용 불가 (static const 별칭 필요)
 - Flutter: const 위젯 안에 runtime 상수 포함 시 const 제거 필요
+- face_analyzer.py: MediaPipe 제거, FER(fer==22.5.1) 사용 중
+- mediapipe 패키지 제거됨 (protobuf 충돌로 삭제)
+- auto_collect.py: 백엔드 실행 후 별도 터미널에서 실행
+- 자동 수집은 노트북 켤 때마다 실행 권장 (하루 20~50개)
+- 자동 수집 중단: Ctrl + C (이미 완료된 데이터는 DB에 정상 저장됨)
+- **DB 초기화 방법 (Claude API 교체 후 깨끗하게 시작할 때):**
+
+```
+# DB 테이블 초기화
+cd C:\dev\vibeview\server
+C:\Python311\python.exe -c "from database import engine; from models import AnalysisResult; AnalysisResult.__table__.drop(engine); AnalysisResult.__table__.create(engine); print('DB 초기화 완료')"
+
+# 프레임 이미지 전체 삭제
+rmdir /s /q C:\dev\vibeview\server\static\frames
+```
