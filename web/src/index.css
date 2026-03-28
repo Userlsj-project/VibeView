@@ -43,7 +43,7 @@
 body {
   background: var(--bg);
   color: var(--text);
-  font-family: 'Syne', 'Segoe UI', sans-serif; /* fallback 추가 */
+  font-family: 'Syne', 'Segoe UI', sans-serif;
   min-height: 100vh;
   overflow-x: hidden;
   -webkit-font-smoothing: antialiased;
@@ -76,43 +76,51 @@ body::before {
 
 /* ── 반응형: 태블릿 (768px 이하) ──────────────────────── */
 @media (max-width: 768px) {
-  /* 헤더 패딩 축소 */
   header {
     padding: 16px 20px !important;
   }
 
-  /* 헤더 태그 숨김 */
   header .tag-group {
     display: none !important;
   }
 
-  /* 메인 패딩 축소 */
   main {
     padding: 24px 16px !important;
   }
 
-  /* 제목 폰트 축소 */
   h2 {
     font-size: 22px !important;
   }
 
-  /* URL 입력 세로 배치 */
   .url-row {
     flex-direction: column !important;
   }
 
-  /* 비디오 정보 2열 */
   .info-grid {
     grid-template-columns: repeat(2, 1fr) !important;
   }
 
-  /* 얼굴/음성 카드 세로 배치 */
+  /* 얼굴/음성/장면/융합 카드 세로 배치 */
   .analysis-grid {
     grid-template-columns: 1fr !important;
   }
 
-  /* 음성 카드 내 3열 → 1열 */
   .audio-stats-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* YouTube 통계 내 썸네일+텍스트 세로 배치 */
+  .yt-stats-inner {
+    flex-direction: column !important;
+  }
+
+  /* 트렌드 요약 카드 1열 */
+  .trend-summary-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* 트렌드 등급/감정 차트 세로 배치 */
+  .trend-chart-grid {
     grid-template-columns: 1fr !important;
   }
 }
@@ -122,5 +130,9 @@ body::before {
   .info-grid {
     grid-template-columns: repeat(2, 1fr) !important;
     gap: 10px !important;
+  }
+
+  .yt-stats-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
   }
 }

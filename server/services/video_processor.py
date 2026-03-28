@@ -1,3 +1,5 @@
+# C:\dev\vibeview\server\services\video_processor.py
+
 import cv2
 import subprocess
 import tempfile
@@ -8,6 +10,9 @@ import yt_dlp
 
 # cookies.txt 경로: server/cookies.txt
 _COOKIES_PATH = Path(__file__).parent.parent / "cookies.txt"
+
+# 프레임 영구 저장 폴더: server/static/frames/{video_id}/
+_FRAMES_ROOT = Path(__file__).parent.parent / "static" / "frames"
 
 
 class VideoProcessor:
@@ -22,6 +27,7 @@ class VideoProcessor:
         self.fps = fps
         self.output_dir = Path(output_dir) if output_dir else Path(tempfile.mkdtemp(prefix="vibeview_"))
         self.output_dir.mkdir(parents=True, exist_ok=True)
+        self.video_id: Optional[str] = None  # 분석 후 설정됨
 
     # ------------------------------------------------------------------
     # 1. 영상 다운로드
@@ -35,9 +41,7 @@ class VideoProcessor:
             "quiet": True,
             "no_warnings": True,
             "merge_output_format": "mp4",
-            # Python API에서 js_runtimes 올바른 형식
             "js_runtimes": {"node": {}},
-            # remote_components는 set 형식
             "remote_components": {"ejs:github"},
         }
 
@@ -49,6 +53,8 @@ class VideoProcessor:
                 info = ydl.extract_info(url, download=True)
                 if info is None:
                     raise RuntimeError("영상 정보를 가져올 수 없습니다.")
+                # video_id 저장 (YouTube의 경우)
+                self.video_id = info.get("id") or info.get("display_id") or "unknown"
         except yt_dlp.utils.DownloadError as e:
             err = str(e)
             if "Please sign in" in err or "Sign in" in err:
@@ -114,11 +120,16 @@ class VideoProcessor:
         return audio_path
 
     # ------------------------------------------------------------------
-    # 3. 프레임 추출
+    # 3. 프레임 추출 (영구 저장 폴더에 저장)
     # ------------------------------------------------------------------
     def extract_frames(self, video_path: Path) -> list[dict]:
-        frames_dir = self.output_dir / "frames"
-        frames_dir.mkdir(exist_ok=True)
+        """
+        프레임을 static/frames/{video_id}/ 폴더에 영구 저장합니다.
+        분석 후에도 /frames/{video_id}/{파일명} 으로 접근 가능합니다.
+        """
+        video_id = self.video_id or "unknown"
+        frames_dir = _FRAMES_ROOT / video_id
+        frames_dir.mkdir(parents=True, exist_ok=True)
 
         cap = cv2.VideoCapture(str(video_path))
         if not cap.isOpened():
@@ -138,11 +149,14 @@ class VideoProcessor:
                 break
             if frame_idx % interval == 0:
                 timestamp = frame_idx / video_fps
-                frame_path = frames_dir / f"frame_{frame_idx:06d}.jpg"
-                cv2.imwrite(str(frame_path), frame, [cv2.IMWRITE_JPEG_QUALITY, 90])
+                filename = f"frame_{frame_idx:06d}.jpg"
+                frame_path = frames_dir / filename
+                cv2.imwrite(str(frame_path), frame, [cv2.IMWRITE_JPEG_QUALITY, 85])
                 results.append({
                     "timestamp": round(timestamp, 3),
                     "frame_path": frame_path,
+                    # 클라이언트에서 접근할 URL 경로
+                    "frame_url": f"/frames/{video_id}/{filename}",
                 })
             frame_idx += 1
 
@@ -188,11 +202,13 @@ class VideoProcessor:
             "frames": frames,
             "info": info,
             "work_dir": self.output_dir,
+            "video_id": self.video_id,
         }
 
     # ------------------------------------------------------------------
-    # 6. 정리
+    # 6. 정리 (프레임은 유지, 임시 파일만 삭제)
     # ------------------------------------------------------------------
     def cleanup(self):
+        """임시 작업 폴더(영상, 오디오)만 삭제합니다. 프레임은 static에 유지됩니다."""
         if self.output_dir.exists():
             shutil.rmtree(self.output_dir)

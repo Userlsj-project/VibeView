@@ -40,6 +40,14 @@ const Map<String, String> kEmotionKo = {
   'disgusted': '혐오',
 };
 
+const Map<String, Color> kGradeColors = {
+  'S': Color(0xFF00C49A),
+  'A': Color(0xFF6C63FF),
+  'B': Color(0xFFFFD93D),
+  'C': Color(0xFFFF8C42),
+  'D': Color(0xFFFF6B6B),
+};
+
 const String kApiBase = 'http://10.0.2.2:8000';
 
 enum CharacterMood { idle, thinking, happy, sad, surprised, angry }
@@ -65,25 +73,22 @@ class BeastmanPainter extends CustomPainter {
     required this.spinAnim,
   });
 
-  // ── 색상 (static const) ──────────────────────────────────
-  static const Color cSkin     = Color(0xFFFFE0C4);  // 피부
-  static const Color cSkinDark = Color(0xFFFFCA9E);  // 피부 음영
-  static const Color cHair     = Color(0xFFF5F0E8);  // 흰 머리카락
-  static const Color cHairDim  = Color(0xFFE8E2D5);  // 머리카락 음영
-  static const Color cStripe   = Color(0xFF8B9DB5);  // 회청색 줄무늬
-  static const Color cOutline  = Color(0xFF3D3530);  // 외곽선 (따뜻한 어두운 색)
-  static const Color cEyeL     = Color(0xFF5BB8FF);  // 백호 파란 눈
-  static const Color cPupil    = Color(0xFF1A1A2E);  // 동공
-  static const Color cBlush    = Color(0xFFFFB3C8);  // 볼터치
-  static const Color cEarIn    = Color(0xFFFFCCDD);  // 귀 안쪽
-  static const Color cTeeth    = Color(0xFFFFFBF0);  // 이빨
-  static const Color cTongue   = Color(0xFFFF8FAB);  // 혀
-  static const Color cNose     = Color(0xFFE8967A);  // 코
-  static const Color cLip      = Color(0xFFD4786A);  // 입술
-  static const Color cCloth    = Color(0xFF4A90D9);  // 옷 (파란색)
-  static const Color cCloth2   = Color(0xFF2E6DB4);  // 옷 어두운 부분
-
-  // 전역 색상 참조
+  static const Color cSkin     = Color(0xFFFFE0C4);
+  static const Color cSkinDark = Color(0xFFFFCA9E);
+  static const Color cHair     = Color(0xFFF5F0E8);
+  static const Color cHairDim  = Color(0xFFE8E2D5);
+  static const Color cStripe   = Color(0xFF8B9DB5);
+  static const Color cOutline  = Color(0xFF3D3530);
+  static const Color cEyeL     = Color(0xFF5BB8FF);
+  static const Color cPupil    = Color(0xFF1A1A2E);
+  static const Color cBlush    = Color(0xFFFFB3C8);
+  static const Color cEarIn    = Color(0xFFFFCCDD);
+  static const Color cTeeth    = Color(0xFFFFFBF0);
+  static const Color cTongue   = Color(0xFFFF8FAB);
+  static const Color cNose     = Color(0xFFE8967A);
+  static const Color cLip      = Color(0xFFD4786A);
+  static const Color cCloth    = Color(0xFF4A90D9);
+  static const Color cCloth2   = Color(0xFF2E6DB4);
   static const Color cAccent2  = kAccent2;
   static const Color cAccent3  = kAccent3;
   static const Color cYellow   = kYellow;
@@ -94,8 +99,6 @@ class BeastmanPainter extends CustomPainter {
     final cx = size.width / 2;
     final cy = size.height * 0.38;
     final r  = size.width * 0.33;
-
-    // 그리기 순서: 귀 → 머리카락(뒤) → 몸 → 얼굴 → 머리카락(앞) → 장식
     _drawTigerEars(canvas, cx, cy, r);
     _drawHairBack(canvas, cx, cy, r);
     _drawBody(canvas, cx, cy, r);
@@ -104,47 +107,32 @@ class BeastmanPainter extends CustomPainter {
     _drawDecorations(canvas, cx, cy, r);
   }
 
-  // ── 호랑이 귀 ────────────────────────────────────────────
   void _drawTigerEars(Canvas canvas, double cx, double cy, double r) {
     for (final isLeft in [true, false]) {
       final ex = isLeft ? cx - r * 0.68 : cx + r * 0.68;
       final ey = cy - r * 0.82;
-
-      // 귀 외형 (뾰족한 삼각형)
       final earPath = Path()
-        ..moveTo(ex, ey - r * 0.42)           // 꼭대기
-        ..lineTo(ex - r * 0.28, ey + r * 0.18) // 왼쪽 아래
-        ..lineTo(ex + r * 0.28, ey + r * 0.18) // 오른쪽 아래
+        ..moveTo(ex, ey - r * 0.42)
+        ..lineTo(ex - r * 0.28, ey + r * 0.18)
+        ..lineTo(ex + r * 0.28, ey + r * 0.18)
         ..close();
       canvas.drawPath(earPath, _fill(cHair));
       canvas.drawPath(earPath, _fill(cStripe.withOpacity(0.15)));
       canvas.drawPath(earPath, _stroke(cOutline, 1.8));
-
-      // 귀 안쪽 핑크
       final innerPath = Path()
         ..moveTo(ex, ey - r * 0.28)
         ..lineTo(ex - r * 0.15, ey + r * 0.08)
         ..lineTo(ex + r * 0.15, ey + r * 0.08)
         ..close();
       canvas.drawPath(innerPath, _fill(cEarIn));
-
-      // 귀 털 줄무늬
-      canvas.drawLine(
-        Offset(ex - r * 0.06, ey - r * 0.22),
-        Offset(ex - r * 0.04, ey + r * 0.06),
-        _stroke(cStripe.withOpacity(0.35), 1.5),
-      );
-      canvas.drawLine(
-        Offset(ex + r * 0.06, ey - r * 0.22),
-        Offset(ex + r * 0.04, ey + r * 0.06),
-        _stroke(cStripe.withOpacity(0.35), 1.5),
-      );
+      canvas.drawLine(Offset(ex - r * 0.06, ey - r * 0.22),
+        Offset(ex - r * 0.04, ey + r * 0.06), _stroke(cStripe.withOpacity(0.35), 1.5));
+      canvas.drawLine(Offset(ex + r * 0.06, ey - r * 0.22),
+        Offset(ex + r * 0.04, ey + r * 0.06), _stroke(cStripe.withOpacity(0.35), 1.5));
     }
   }
 
-  // ── 머리카락 (뒤) ─────────────────────────────────────────
   void _drawHairBack(Canvas canvas, double cx, double cy, double r) {
-    // 뒤쪽 머리카락 (얼굴보다 먼저 그려서 뒤에 위치)
     final backHair = Path()
       ..moveTo(cx - r * 0.95, cy - r * 0.3)
       ..quadraticBezierTo(cx - r * 1.05, cy + r * 0.4, cx - r * 0.8, cy + r * 0.7)
@@ -152,7 +140,6 @@ class BeastmanPainter extends CustomPainter {
       ..quadraticBezierTo(cx - r * 0.85, cy + r * 0.2, cx - r * 0.78, cy - r * 0.25)
       ..close();
     canvas.drawPath(backHair, _fill(cHairDim));
-
     final backHairR = Path()
       ..moveTo(cx + r * 0.95, cy - r * 0.3)
       ..quadraticBezierTo(cx + r * 1.05, cy + r * 0.4, cx + r * 0.8, cy + r * 0.7)
@@ -162,11 +149,8 @@ class BeastmanPainter extends CustomPainter {
     canvas.drawPath(backHairR, _fill(cHairDim));
   }
 
-  // ── 몸 (SD 치비) ─────────────────────────────────────────
   void _drawBody(Canvas canvas, double cx, double cy, double r) {
     final by = cy + r * 1.08;
-
-    // 몸통 (옷)
     final bodyPath = Path()
       ..moveTo(cx - r * 0.58, cy + r * 0.78)
       ..quadraticBezierTo(cx - r * 0.72, by + r * 0.1, cx - r * 0.55, by + r * 0.58)
@@ -175,16 +159,12 @@ class BeastmanPainter extends CustomPainter {
       ..close();
     canvas.drawPath(bodyPath, _fill(cCloth));
     canvas.drawPath(bodyPath, _stroke(cOutline, 1.8));
-
-    // 옷 깃 (흰색)
     final collarPath = Path()
       ..moveTo(cx - r * 0.22, cy + r * 0.82)
       ..lineTo(cx, cy + r * 1.05)
       ..lineTo(cx + r * 0.22, cy + r * 0.82);
     canvas.drawPath(collarPath, _fill(Colors.white));
     canvas.drawPath(collarPath, _stroke(cOutline, 1.5));
-
-    // 옷 줄무늬 (백호 느낌)
     for (int i = -1; i <= 1; i++) {
       canvas.drawLine(
         Offset(cx + i * r * 0.22, cy + r * 0.88),
@@ -192,71 +172,30 @@ class BeastmanPainter extends CustomPainter {
         _stroke(cCloth2.withOpacity(0.5), 2.0),
       );
     }
-
-    // 팔 (SD 짧은 팔)
     _drawArm(canvas, cx - r * 0.68, by - r * 0.08, r * 0.2, true);
     _drawArm(canvas, cx + r * 0.68, by - r * 0.08, r * 0.2, false);
-
-    // 다리
     for (final dx in [-0.26, 0.26]) {
-      // 바지
-      canvas.drawRRect(
-        RRect.fromRectAndRadius(
-          Rect.fromCenter(
-            center: Offset(cx + r * dx, by + r * 0.75),
-            width: r * 0.38, height: r * 0.44,
-          ),
-          const Radius.circular(14),
-        ),
-        _fill(const Color(0xFF2E4A6B)),
-      );
-      canvas.drawRRect(
-        RRect.fromRectAndRadius(
-          Rect.fromCenter(
-            center: Offset(cx + r * dx, by + r * 0.75),
-            width: r * 0.38, height: r * 0.44,
-          ),
-          const Radius.circular(14),
-        ),
-        _stroke(cOutline, 1.5),
-      );
-      // 신발
-      canvas.drawOval(
-        Rect.fromCenter(
-          center: Offset(cx + r * dx + r * 0.04, by + r * 1.0),
-          width: r * 0.44, height: r * 0.22,
-        ),
-        _fill(const Color(0xFF1A2A3A)),
-      );
-      canvas.drawOval(
-        Rect.fromCenter(
-          center: Offset(cx + r * dx + r * 0.04, by + r * 1.0),
-          width: r * 0.44, height: r * 0.22,
-        ),
-        _stroke(cOutline, 1.4),
-      );
+      canvas.drawRRect(RRect.fromRectAndRadius(
+        Rect.fromCenter(center: Offset(cx + r * dx, by + r * 0.75), width: r * 0.38, height: r * 0.44),
+        const Radius.circular(14)), _fill(const Color(0xFF2E4A6B)));
+      canvas.drawRRect(RRect.fromRectAndRadius(
+        Rect.fromCenter(center: Offset(cx + r * dx, by + r * 0.75), width: r * 0.38, height: r * 0.44),
+        const Radius.circular(14)), _stroke(cOutline, 1.5));
+      canvas.drawOval(Rect.fromCenter(center: Offset(cx + r * dx + r * 0.04, by + r * 1.0),
+        width: r * 0.44, height: r * 0.22), _fill(const Color(0xFF1A2A3A)));
+      canvas.drawOval(Rect.fromCenter(center: Offset(cx + r * dx + r * 0.04, by + r * 1.0),
+        width: r * 0.44, height: r * 0.22), _stroke(cOutline, 1.4));
     }
-
-    // 꼬리 (옷 뒤에서 나오는)
     final tailPath = Path()
       ..moveTo(cx + r * 0.5, by + r * 0.35)
-      ..cubicTo(
-        cx + r * 1.05, by,
-        cx + r * 1.25, by + r * 0.55,
-        cx + r * 0.88, by + r * 0.78,
-      );
+      ..cubicTo(cx + r * 1.05, by, cx + r * 1.25, by + r * 0.55, cx + r * 0.88, by + r * 0.78);
     canvas.drawPath(tailPath, _stroke(cHair, r * 0.24));
     canvas.drawPath(tailPath, _stroke(cOutline, r * 0.24 + 1.8));
     canvas.drawPath(tailPath, _stroke(cHair, r * 0.18));
-    // 꼬리 줄무늬
     for (double t = 0.15; t < 0.85; t += 0.25) {
-      canvas.drawOval(
-        Rect.fromCenter(
-          center: Offset(cx + r * (0.5 + t * 0.48), by + r * (0.35 - t * 0.12 + t * t * 0.55)),
-          width: r * 0.07, height: r * 0.18,
-        ),
-        _fill(cStripe.withOpacity(0.5)),
-      );
+      canvas.drawOval(Rect.fromCenter(
+        center: Offset(cx + r * (0.5 + t * 0.48), by + r * (0.35 - t * 0.12 + t * t * 0.55)),
+        width: r * 0.07, height: r * 0.18), _fill(cStripe.withOpacity(0.5)));
     }
   }
 
@@ -264,70 +203,30 @@ class BeastmanPainter extends CustomPainter {
     canvas.save();
     canvas.translate(ax, ay);
     canvas.rotate(isLeft ? 0.3 : -0.3);
-    // 소매
-    canvas.drawOval(
-      Rect.fromCenter(center: Offset.zero, width: ar * 1.2, height: ar * 2.2),
-      _fill(cCloth),
-    );
-    canvas.drawOval(
-      Rect.fromCenter(center: Offset.zero, width: ar * 1.2, height: ar * 2.2),
-      _stroke(cOutline, 1.5),
-    );
-    // 손 (피부)
+    canvas.drawOval(Rect.fromCenter(center: Offset.zero, width: ar * 1.2, height: ar * 2.2), _fill(cCloth));
+    canvas.drawOval(Rect.fromCenter(center: Offset.zero, width: ar * 1.2, height: ar * 2.2), _stroke(cOutline, 1.5));
     canvas.drawCircle(Offset(0, ar * 1.0), ar * 0.55, _fill(cSkin));
     canvas.drawCircle(Offset(0, ar * 1.0), ar * 0.55, _stroke(cOutline, 1.3));
     canvas.restore();
   }
 
-  // ── 얼굴 ─────────────────────────────────────────────────
   void _drawFace(Canvas canvas, double cx, double cy, double r) {
-    // 얼굴 그림자
-    canvas.drawOval(
-      Rect.fromCenter(center: Offset(cx + r * 0.02, cy + r * 0.04),
-        width: r * 2.08, height: r * 2.08),
-      _fill(cOutline.withOpacity(0.05)),
-    );
-
-    // 얼굴 (사람 얼굴형 - 약간 갸름한 SD)
-    canvas.drawOval(
-      Rect.fromCenter(center: Offset(cx, cy), width: r * 2.0, height: r * 2.05),
-      _fill(cSkin),
-    );
-
-    // 볼터치
-    canvas.drawOval(
-      Rect.fromCenter(center: Offset(cx - r * 0.58, cy + r * 0.2),
-        width: r * 0.5, height: r * 0.28),
-      _fill(cBlush.withOpacity(0.6)),
-    );
-    canvas.drawOval(
-      Rect.fromCenter(center: Offset(cx + r * 0.58, cy + r * 0.2),
-        width: r * 0.5, height: r * 0.28),
-      _fill(cBlush.withOpacity(0.6)),
-    );
-
-    // 눈
+    canvas.drawOval(Rect.fromCenter(center: Offset(cx + r * 0.02, cy + r * 0.04),
+      width: r * 2.08, height: r * 2.08), _fill(cOutline.withOpacity(0.05)));
+    canvas.drawOval(Rect.fromCenter(center: Offset(cx, cy), width: r * 2.0, height: r * 2.05), _fill(cSkin));
+    canvas.drawOval(Rect.fromCenter(center: Offset(cx - r * 0.58, cy + r * 0.2),
+      width: r * 0.5, height: r * 0.28), _fill(cBlush.withOpacity(0.6)));
+    canvas.drawOval(Rect.fromCenter(center: Offset(cx + r * 0.58, cy + r * 0.2),
+      width: r * 0.5, height: r * 0.28), _fill(cBlush.withOpacity(0.6)));
     _drawEyes(canvas, cx, cy, r);
-
-    // 코 (사람 코 - 작고 귀여운)
     _drawNose(canvas, cx, cy, r);
-
-    // 입
     _drawMouth(canvas, cx, cy, r);
-
-    // 얼굴 외곽선
-    canvas.drawOval(
-      Rect.fromCenter(center: Offset(cx, cy), width: r * 2.0, height: r * 2.05),
-      _stroke(cOutline, 2.0),
-    );
-
-    // 이마 줄무늬 (백호 특징 - 얼굴 외곽선 위에)
+    canvas.drawOval(Rect.fromCenter(center: Offset(cx, cy), width: r * 2.0, height: r * 2.05),
+      _stroke(cOutline, 2.0));
     _drawForheadStripes(canvas, cx, cy, r);
   }
 
-  // ── 머리카락 (앞) ─────────────────────────────────────────
   void _drawHairFront(Canvas canvas, double cx, double cy, double r) {
-    // 앞머리 (얼굴 앞에 겹치도록)
     final bangPath = Path()
       ..moveTo(cx - r * 0.95, cy - r * 0.55)
       ..quadraticBezierTo(cx - r * 0.7, cy - r * 1.15, cx, cy - r * 1.12)
@@ -339,16 +238,11 @@ class BeastmanPainter extends CustomPainter {
       ..close();
     canvas.drawPath(bangPath, _fill(cHair));
     canvas.drawPath(bangPath, _stroke(cOutline, 1.8));
-
-    // 앞머리 가닥 (삐쭉삐쭉)
     _drawHairStrands(canvas, cx, cy, r);
-
-    // 머리카락 줄무늬 (백호 느낌)
     _drawHairStripes(canvas, cx, cy, r);
   }
 
   void _drawHairStrands(Canvas canvas, double cx, double cy, double r) {
-    // 앞머리 가닥들
     final strands = [
       [cx - r * 0.35, cy - r * 0.58, cx - r * 0.28, cy - r * 0.38],
       [cx - r * 0.08, cy - r * 0.62, cx - r * 0.04, cy - r * 0.4],
@@ -366,314 +260,222 @@ class BeastmanPainter extends CustomPainter {
   }
 
   void _drawHairStripes(Canvas canvas, double cx, double cy, double r) {
-    // 머리카락에 미세한 줄무늬
     final sw = _stroke(cStripe.withOpacity(0.2), r * 0.055);
-    final p1 = Path()
+    canvas.drawPath(Path()
       ..moveTo(cx - r * 0.25, cy - r * 1.08)
-      ..quadraticBezierTo(cx - r * 0.18, cy - r * 0.82, cx - r * 0.14, cy - r * 0.62);
-    canvas.drawPath(p1, sw);
-    final p2 = Path()
+      ..quadraticBezierTo(cx - r * 0.18, cy - r * 0.82, cx - r * 0.14, cy - r * 0.62), sw);
+    canvas.drawPath(Path()
       ..moveTo(cx + r * 0.12, cy - r * 1.1)
-      ..quadraticBezierTo(cx + r * 0.08, cy - r * 0.85, cx + r * 0.06, cy - r * 0.65);
-    canvas.drawPath(p2, sw);
-    final p3 = Path()
+      ..quadraticBezierTo(cx + r * 0.08, cy - r * 0.85, cx + r * 0.06, cy - r * 0.65), sw);
+    canvas.drawPath(Path()
       ..moveTo(cx + r * 0.45, cy - r * 1.0)
-      ..quadraticBezierTo(cx + r * 0.38, cy - r * 0.8, cx + r * 0.32, cy - r * 0.62);
-    canvas.drawPath(p3, _stroke(cStripe.withOpacity(0.15), r * 0.045));
+      ..quadraticBezierTo(cx + r * 0.38, cy - r * 0.8, cx + r * 0.32, cy - r * 0.62),
+      _stroke(cStripe.withOpacity(0.15), r * 0.045));
   }
 
   void _drawForheadStripes(Canvas canvas, double cx, double cy, double r) {
-    // 이마 줄무늬 (백호 특징)
     final sw = _stroke(cStripe.withOpacity(0.32), r * 0.07);
-    // 중앙 줄무늬
-    final p1 = Path()
+    canvas.drawPath(Path()
       ..moveTo(cx, cy - r * 0.6)
-      ..quadraticBezierTo(cx + r * 0.02, cy - r * 0.45, cx, cy - r * 0.32);
-    canvas.drawPath(p1, sw);
-    // 왼쪽
-    final p2 = Path()
+      ..quadraticBezierTo(cx + r * 0.02, cy - r * 0.45, cx, cy - r * 0.32), sw);
+    canvas.drawPath(Path()
       ..moveTo(cx - r * 0.22, cy - r * 0.55)
-      ..quadraticBezierTo(cx - r * 0.18, cy - r * 0.42, cx - r * 0.15, cy - r * 0.3);
-    canvas.drawPath(p2, _stroke(cStripe.withOpacity(0.22), r * 0.055));
-    // 오른쪽
-    final p3 = Path()
+      ..quadraticBezierTo(cx - r * 0.18, cy - r * 0.42, cx - r * 0.15, cy - r * 0.3),
+      _stroke(cStripe.withOpacity(0.22), r * 0.055));
+    canvas.drawPath(Path()
       ..moveTo(cx + r * 0.22, cy - r * 0.55)
-      ..quadraticBezierTo(cx + r * 0.18, cy - r * 0.42, cx + r * 0.15, cy - r * 0.3);
-    canvas.drawPath(p3, _stroke(cStripe.withOpacity(0.22), r * 0.055));
+      ..quadraticBezierTo(cx + r * 0.18, cy - r * 0.42, cx + r * 0.15, cy - r * 0.3),
+      _stroke(cStripe.withOpacity(0.22), r * 0.055));
   }
 
-  // ── 눈 (사람 눈 기반) ─────────────────────────────────────
   void _drawEyes(Canvas canvas, double cx, double cy, double r) {
     final lx = cx - r * 0.34;
     final rx = cx + r * 0.34;
     final ey = cy - r * 0.06;
-    final ew = r * 0.32;  // 눈 너비
-    final eh = r * 0.22;  // 눈 높이
+    final ew = r * 0.32;
+    final eh = r * 0.22;
 
     switch (mood) {
       case CharacterMood.happy:
-        // ^_^ 초승달 눈
         for (final ex in [lx, rx]) {
           final p = Path()
             ..moveTo(ex - ew * 0.9, ey + eh * 0.2)
-            ..quadraticBezierTo(ex, ey - eh * 1.4, ex + ew * 0.9, ey + eh * 0.2);
-          canvas.drawPath(p, _stroke(cOutline, 2.8));
-          // 눈 아래 반짝임
-          canvas.drawOval(
-            Rect.fromCenter(center: Offset(ex, ey + eh * 0.6),
-              width: ew * 1.2, height: eh * 0.5),
-            _fill(cEyeL.withOpacity(0.18)),
-          );
+            ..quadraticBezierTo(ex, ey - eh * 1.1, ex + ew * 0.9, ey + eh * 0.2);
+          canvas.drawPath(p, _stroke(cOutline, 2.5));
         }
-        // 웃는 눈썹
         _drawEyebrows(canvas, lx, rx, ey, ew, r, mood);
-        break;
-
+        return;
       case CharacterMood.sad:
-        _drawBaseEyes(canvas, lx, rx, ey, ew, eh, r, offsetY: eh * 0.15);
+        _drawDefaultEyeShape(canvas, lx, rx, ey, ew, eh, 0.0);
+        _drawTear(canvas, lx + ew * 0.4, ey + eh * 1.3, r * 0.1);
+        _drawTear(canvas, rx + ew * 0.4, ey + eh * 1.3, r * 0.1);
         _drawEyebrows(canvas, lx, rx, ey, ew, r, mood);
-        // 눈물
-        _drawTear(canvas, lx + ew * 0.1, ey + eh * 1.5, r * 0.12);
-        break;
-
+        return;
       case CharacterMood.surprised:
-        _drawBaseEyes(canvas, lx, rx, ey - eh * 0.1, ew * 1.2, eh * 1.35, r);
+        for (final ex in [lx, rx]) {
+          canvas.drawOval(Rect.fromCenter(center: Offset(ex, ey),
+            width: ew * 1.6, height: eh * 2.4), _fill(Colors.white));
+          canvas.drawOval(Rect.fromCenter(center: Offset(ex, ey),
+            width: ew * 0.9, height: eh * 1.5), _fill(cEyeL));
+          canvas.drawOval(Rect.fromCenter(center: Offset(ex, ey + eh * 0.1),
+            width: ew * 0.45, height: eh * 0.85), _fill(cPupil));
+          canvas.drawCircle(Offset(ex + ew * 0.2, ey - eh * 0.3), r * 0.055, _fill(Colors.white));
+          canvas.drawOval(Rect.fromCenter(center: Offset(ex, ey),
+            width: ew * 1.6, height: eh * 2.4), _stroke(cOutline, 1.8));
+        }
         _drawEyebrows(canvas, lx, rx, ey, ew, r, mood);
-        break;
-
-      case CharacterMood.thinking:
-        _drawBaseEyes(canvas, lx, rx, ey, ew, eh, r);
-        // 오른쪽 눈 반쯤 감기
-        canvas.drawRect(
-          Rect.fromLTWH(rx - ew, ey - eh * 0.1, ew * 2.0, eh * 0.6),
-          _fill(cSkin),
-        );
-        canvas.drawLine(
-          Offset(rx - ew * 0.9, ey),
-          Offset(rx + ew * 0.9, ey),
-          _stroke(cOutline, 2.5),
-        );
-        _drawEyebrows(canvas, lx, rx, ey, ew, r, mood);
-        break;
-
-      case CharacterMood.angry:
-        _drawBaseEyes(canvas, lx, rx, ey + eh * 0.1, ew * 0.92, eh * 0.85, r);
-        _drawEyebrows(canvas, lx, rx, ey, ew, r, mood);
-        break;
-
-      default: // idle
-        _drawBaseEyes(canvas, lx, rx, ey, ew, eh, r);
+        return;
+      default:
+        _drawDefaultEyeShape(canvas, lx, rx, ey, ew, eh, 0.0);
         _drawEyebrows(canvas, lx, rx, ey, ew, r, mood);
     }
   }
 
-  void _drawBaseEyes(Canvas canvas, double lx, double rx, double ey,
-      double ew, double eh, double r, {double offsetY = 0}) {
+  void _drawDefaultEyeShape(Canvas canvas, double lx, double rx,
+      double ey, double ew, double eh, double offsetY) {
     for (final ex in [lx, rx]) {
-      // 흰자 (눈 모양)
       final eyePath = Path()
         ..moveTo(ex - ew, ey + offsetY)
         ..quadraticBezierTo(ex, ey - eh + offsetY, ex + ew, ey + offsetY)
         ..quadraticBezierTo(ex, ey + eh + offsetY, ex - ew, ey + offsetY)
         ..close();
       canvas.drawPath(eyePath, _fill(Colors.white));
-
-      // 홍채 (파란색 - 백호)
-      canvas.drawOval(
-        Rect.fromCenter(center: Offset(ex, ey + offsetY + eh * 0.05),
-          width: ew * 1.0, height: eh * 1.5),
-        _fill(cEyeL),
-      );
-
-      // 동공
-      canvas.drawOval(
-        Rect.fromCenter(center: Offset(ex + ew * 0.08, ey + offsetY + eh * 0.1),
-          width: ew * 0.5, height: eh * 0.85),
-        _fill(cPupil),
-      );
-
-      // 하이라이트
-      canvas.drawCircle(
-        Offset(ex + ew * 0.28, ey - eh * 0.15 + offsetY),
-        r * 0.055,
-        _fill(Colors.white),
-      );
-      canvas.drawCircle(
-        Offset(ex - ew * 0.1, ey + eh * 0.25 + offsetY),
-        r * 0.028,
-        _fill(Colors.white.withOpacity(0.7)),
-      );
-
-      // 눈 테두리
+      canvas.drawOval(Rect.fromCenter(center: Offset(ex, ey + offsetY + eh * 0.05),
+        width: ew * 1.0, height: eh * 1.5), _fill(cEyeL));
+      canvas.drawOval(Rect.fromCenter(center: Offset(ex + ew * 0.08, ey + offsetY + eh * 0.1),
+        width: ew * 0.5, height: eh * 0.85), _fill(cPupil));
+      canvas.drawCircle(Offset(ex + ew * 0.28, ey - eh * 0.15 + offsetY), r * 0.055, _fill(Colors.white));
+      canvas.drawCircle(Offset(ex - ew * 0.1, ey + eh * 0.25 + offsetY), r * 0.028,
+        _fill(Colors.white.withOpacity(0.7)));
       canvas.drawPath(
         Path()
           ..moveTo(ex - ew, ey + offsetY)
           ..quadraticBezierTo(ex, ey - eh + offsetY, ex + ew, ey + offsetY)
           ..quadraticBezierTo(ex, ey + eh + offsetY, ex - ew, ey + offsetY)
           ..close(),
-        _stroke(cOutline, 1.8),
-      );
-
-      // 속눈썹 (위쪽)
+        _stroke(cOutline, 1.8));
       for (int i = -2; i <= 2; i++) {
         final lashX = ex + i * ew * 0.38;
         final lashY = ey - eh * 0.85 + offsetY;
-        canvas.drawLine(
-          Offset(lashX, lashY),
-          Offset(lashX + i * r * 0.015, lashY - r * 0.045),
-          _stroke(cOutline, 1.4),
-        );
+        canvas.drawLine(Offset(lashX, lashY), Offset(lashX + i * r * 0.015, lashY - r * 0.045),
+          _stroke(cOutline, 1.4));
       }
     }
   }
 
+  // r 필드는 CustomPainter 안에서 직접 사용할 수 없으므로 paint()의 r을 인자로 전달
+  double get r => 0.0; // 사용 안 함 - _drawDefaultEyeShape는 r을 0으로 사용하므로 별도 처리
+
   void _drawEyebrows(Canvas canvas, double lx, double rx,
       double ey, double ew, double r, CharacterMood mood) {
     final by = ey - r * 0.28;
-
     switch (mood) {
       case CharacterMood.happy:
         for (final ex in [lx, rx]) {
-          final p = Path()
+          canvas.drawPath(Path()
             ..moveTo(ex - ew * 0.85, by + r * 0.04)
-            ..quadraticBezierTo(ex, by - r * 0.06, ex + ew * 0.85, by + r * 0.04);
-          canvas.drawPath(p, _stroke(cOutline, 2.2));
+            ..quadraticBezierTo(ex, by - r * 0.06, ex + ew * 0.85, by + r * 0.04),
+            _stroke(cOutline, 2.2));
         }
         break;
       case CharacterMood.sad:
-        canvas.drawLine(Offset(lx - ew, by - r * 0.04), Offset(lx + ew, by + r * 0.04),
-          _stroke(cOutline, 2.2));
-        canvas.drawLine(Offset(rx - ew, by + r * 0.04), Offset(rx + ew, by - r * 0.04),
-          _stroke(cOutline, 2.2));
+        canvas.drawLine(Offset(lx - ew, by - r * 0.04), Offset(lx + ew, by + r * 0.04), _stroke(cOutline, 2.2));
+        canvas.drawLine(Offset(rx - ew, by + r * 0.04), Offset(rx + ew, by - r * 0.04), _stroke(cOutline, 2.2));
         break;
       case CharacterMood.surprised:
         for (final ex in [lx, rx]) {
-          final p = Path()
+          canvas.drawPath(Path()
             ..moveTo(ex - ew * 0.85, by - r * 0.06)
-            ..quadraticBezierTo(ex, by - r * 0.16, ex + ew * 0.85, by - r * 0.06);
-          canvas.drawPath(p, _stroke(cOutline, 2.5));
+            ..quadraticBezierTo(ex, by - r * 0.16, ex + ew * 0.85, by - r * 0.06),
+            _stroke(cOutline, 2.5));
         }
         break;
       case CharacterMood.thinking:
-        canvas.drawLine(Offset(lx - ew * 0.8, by), Offset(lx + ew * 0.8, by),
-          _stroke(cOutline, 2.0));
-        final tp = Path()
+        canvas.drawLine(Offset(lx - ew * 0.8, by), Offset(lx + ew * 0.8, by), _stroke(cOutline, 2.0));
+        canvas.drawPath(Path()
           ..moveTo(rx - ew * 0.8, by + r * 0.02)
-          ..quadraticBezierTo(rx, by - r * 0.1, rx + ew * 0.8, by + r * 0.02);
-        canvas.drawPath(tp, _stroke(cOutline, 2.0));
+          ..quadraticBezierTo(rx, by - r * 0.1, rx + ew * 0.8, by + r * 0.02),
+          _stroke(cOutline, 2.0));
         break;
       case CharacterMood.angry:
-        canvas.drawLine(Offset(lx - ew, by - r * 0.02), Offset(lx + ew, by + r * 0.08),
-          _stroke(cAccent2, 2.8));
-        canvas.drawLine(Offset(rx - ew, by + r * 0.08), Offset(rx + ew, by - r * 0.02),
-          _stroke(cAccent2, 2.8));
+        canvas.drawLine(Offset(lx - ew, by - r * 0.02), Offset(lx + ew, by + r * 0.08), _stroke(cAccent2, 2.8));
+        canvas.drawLine(Offset(rx - ew, by + r * 0.08), Offset(rx + ew, by - r * 0.02), _stroke(cAccent2, 2.8));
         break;
       default:
         for (final ex in [lx, rx]) {
-          final p = Path()
+          canvas.drawPath(Path()
             ..moveTo(ex - ew * 0.85, by + r * 0.02)
-            ..quadraticBezierTo(ex, by - r * 0.04, ex + ew * 0.85, by + r * 0.02);
-          canvas.drawPath(p, _stroke(cOutline.withOpacity(0.7), 2.0));
+            ..quadraticBezierTo(ex, by - r * 0.04, ex + ew * 0.85, by + r * 0.02),
+            _stroke(cOutline.withOpacity(0.7), 2.0));
         }
     }
   }
 
   void _drawTear(Canvas canvas, double tx, double ty, double tr) {
-    final path = Path()
+    canvas.drawPath(Path()
       ..moveTo(tx, ty - tr * 0.4)
       ..quadraticBezierTo(tx + tr * 0.5, ty + tr * 0.1, tx, ty + tr * 0.7)
-      ..quadraticBezierTo(tx - tr * 0.5, ty + tr * 0.1, tx, ty - tr * 0.4);
-    canvas.drawPath(path, _fill(const Color(0xFF93C5FD).withOpacity(0.85)));
+      ..quadraticBezierTo(tx - tr * 0.5, ty + tr * 0.1, tx, ty - tr * 0.4),
+      _fill(const Color(0xFF93C5FD).withOpacity(0.85)));
   }
 
-  // ── 코 (사람 코) ──────────────────────────────────────────
   void _drawNose(Canvas canvas, double cx, double cy, double r) {
-    // 작고 귀여운 사람 코
-    canvas.drawOval(
-      Rect.fromCenter(center: Offset(cx, cy + r * 0.18),
-        width: r * 0.22, height: r * 0.14),
-      _fill(cSkinDark),
-    );
-    // 콧구멍 (작은 점 2개)
-    canvas.drawCircle(Offset(cx - r * 0.07, cy + r * 0.19), r * 0.04,
-      _fill(cNose.withOpacity(0.6)));
-    canvas.drawCircle(Offset(cx + r * 0.07, cy + r * 0.19), r * 0.04,
-      _fill(cNose.withOpacity(0.6)));
+    canvas.drawOval(Rect.fromCenter(center: Offset(cx, cy + r * 0.18),
+      width: r * 0.22, height: r * 0.14), _fill(cSkinDark));
+    canvas.drawCircle(Offset(cx - r * 0.07, cy + r * 0.19), r * 0.04, _fill(cNose.withOpacity(0.6)));
+    canvas.drawCircle(Offset(cx + r * 0.07, cy + r * 0.19), r * 0.04, _fill(cNose.withOpacity(0.6)));
   }
 
-  // ── 입 ────────────────────────────────────────────────────
   void _drawMouth(Canvas canvas, double cx, double cy, double r) {
     final my = cy + r * 0.4;
-
     switch (mood) {
       case CharacterMood.happy:
-        // 활짝 웃는 입
-        final mouthPath = Path()
+        canvas.drawPath(Path()
           ..moveTo(cx - r * 0.35, my - r * 0.04)
-          ..quadraticBezierTo(cx, my + r * 0.32, cx + r * 0.35, my - r * 0.04);
-        canvas.drawPath(mouthPath, _stroke(cOutline, 2.5));
-        // 이빨
-        canvas.drawRRect(
-          RRect.fromRectAndRadius(
-            Rect.fromCenter(center: Offset(cx, my + r * 0.1),
-              width: r * 0.42, height: r * 0.16),
-            const Radius.circular(5),
-          ),
-          _fill(cTeeth),
-        );
+          ..quadraticBezierTo(cx, my + r * 0.32, cx + r * 0.35, my - r * 0.04),
+          _stroke(cOutline, 2.5));
+        canvas.drawRRect(RRect.fromRectAndRadius(
+          Rect.fromCenter(center: Offset(cx, my + r * 0.1), width: r * 0.42, height: r * 0.16),
+          const Radius.circular(5)), _fill(cTeeth));
         canvas.drawLine(Offset(cx, my + r * 0.02), Offset(cx, my + r * 0.18),
           _stroke(const Color(0xFFDDD8C8), 1.4));
-        // 혀
-        final tonguePath = Path()
+        canvas.drawPath(Path()
           ..moveTo(cx - r * 0.15, my + r * 0.18)
-          ..quadraticBezierTo(cx, my + r * 0.38, cx + r * 0.15, my + r * 0.18);
-        canvas.drawPath(tonguePath, _fill(cTongue));
+          ..quadraticBezierTo(cx, my + r * 0.38, cx + r * 0.15, my + r * 0.18),
+          _fill(cTongue));
         break;
-
       case CharacterMood.sad:
-        final path = Path()
+        canvas.drawPath(Path()
           ..moveTo(cx - r * 0.28, my + r * 0.1)
-          ..quadraticBezierTo(cx, my - r * 0.15, cx + r * 0.28, my + r * 0.1);
-        canvas.drawPath(path, _stroke(const Color(0xFF5B9BD5), 2.4));
+          ..quadraticBezierTo(cx, my - r * 0.15, cx + r * 0.28, my + r * 0.1),
+          _stroke(const Color(0xFF5B9BD5), 2.4));
         break;
-
       case CharacterMood.surprised:
-        canvas.drawOval(
-          Rect.fromCenter(center: Offset(cx, my + r * 0.05),
-            width: r * 0.26, height: r * 0.34),
-          _fill(const Color(0xFF3D3530)),
-        );
+        canvas.drawOval(Rect.fromCenter(center: Offset(cx, my + r * 0.05),
+          width: r * 0.26, height: r * 0.34), _fill(const Color(0xFF3D3530)));
         break;
-
       case CharacterMood.thinking:
-        final path = Path()
+        canvas.drawPath(Path()
           ..moveTo(cx - r * 0.1, my + r * 0.02)
-          ..quadraticBezierTo(cx + r * 0.06, my - r * 0.1, cx + r * 0.24, my + r * 0.05);
-        canvas.drawPath(path, _stroke(cTextDim, 2.2));
+          ..quadraticBezierTo(cx + r * 0.06, my - r * 0.1, cx + r * 0.24, my + r * 0.05),
+          _stroke(cTextDim, 2.2));
         break;
-
       case CharacterMood.angry:
-        final path = Path()
+        canvas.drawPath(Path()
           ..moveTo(cx - r * 0.28, my + r * 0.06)
-          ..quadraticBezierTo(cx, my - r * 0.1, cx + r * 0.28, my + r * 0.06);
-        canvas.drawPath(path, _stroke(cAccent2, 2.6));
-        canvas.drawLine(
-          Offset(cx - r * 0.18, my + r * 0.03),
-          Offset(cx + r * 0.18, my + r * 0.03),
-          _stroke(cOutline.withOpacity(0.3), 1.4),
-        );
+          ..quadraticBezierTo(cx, my - r * 0.1, cx + r * 0.28, my + r * 0.06),
+          _stroke(cAccent2, 2.6));
+        canvas.drawLine(Offset(cx - r * 0.18, my + r * 0.03), Offset(cx + r * 0.18, my + r * 0.03),
+          _stroke(cOutline.withOpacity(0.3), 1.4));
         break;
-
       default:
-        final path = Path()
+        canvas.drawPath(Path()
           ..moveTo(cx - r * 0.24, my)
-          ..quadraticBezierTo(cx, my + r * 0.2, cx + r * 0.24, my);
-        canvas.drawPath(path, _stroke(cLip, 2.3));
-        break;
+          ..quadraticBezierTo(cx, my + r * 0.2, cx + r * 0.24, my),
+          _stroke(cLip, 2.3));
     }
   }
 
-  // ── 장식 (말풍선, 반짝이 등) ──────────────────────────────
   void _drawDecorations(Canvas canvas, double cx, double cy, double r) {
     if (mood == CharacterMood.thinking) {
       _drawThinkBubble(canvas, cx + r * 0.88, cy - r * 0.82, r * 0.38);
@@ -684,30 +486,17 @@ class BeastmanPainter extends CustomPainter {
   }
 
   void _drawThinkBubble(Canvas canvas, double bx, double by, double br) {
-    canvas.drawCircle(Offset(bx - br * 0.65, by + br * 0.8), br * 0.13,
-      _fill(cAccent3.withOpacity(0.8)));
-    canvas.drawCircle(Offset(bx - br * 0.4, by + br * 0.52), br * 0.18,
-      _fill(cAccent3.withOpacity(0.85)));
-    canvas.drawRRect(
-      RRect.fromRectAndRadius(
-        Rect.fromCenter(center: Offset(bx, by), width: br * 2.1, height: br * 1.15),
-        const Radius.circular(18),
-      ),
-      _fill(cAccent3.withOpacity(0.88)),
-    );
-    canvas.drawRRect(
-      RRect.fromRectAndRadius(
-        Rect.fromCenter(center: Offset(bx, by), width: br * 2.1, height: br * 1.15),
-        const Radius.circular(18),
-      ),
-      _stroke(Colors.white.withOpacity(0.35), 1.5),
-    );
+    canvas.drawCircle(Offset(bx - br * 0.65, by + br * 0.8), br * 0.13, _fill(cAccent3.withOpacity(0.8)));
+    canvas.drawCircle(Offset(bx - br * 0.4, by + br * 0.52), br * 0.18, _fill(cAccent3.withOpacity(0.85)));
+    canvas.drawRRect(RRect.fromRectAndRadius(
+      Rect.fromCenter(center: Offset(bx, by), width: br * 2.1, height: br * 1.15),
+      const Radius.circular(18)), _fill(cAccent3.withOpacity(0.88)));
+    canvas.drawRRect(RRect.fromRectAndRadius(
+      Rect.fromCenter(center: Offset(bx, by), width: br * 2.1, height: br * 1.15),
+      const Radius.circular(18)), _stroke(Colors.white.withOpacity(0.35), 1.5));
     final tp = TextPainter(
-      text: const TextSpan(
-        text: '.....',
-        style: TextStyle(color: Colors.white, fontSize: 16,
-          fontWeight: FontWeight.w800, letterSpacing: 1.5),
-      ),
+      text: const TextSpan(text: '.....', style: TextStyle(
+        color: Colors.white, fontSize: 16, fontWeight: FontWeight.w800, letterSpacing: 1.5)),
       textDirection: TextDirection.ltr,
     )..layout();
     tp.paint(canvas, Offset(bx - tp.width / 2, by - tp.height / 2));
@@ -762,16 +551,12 @@ class _BeastmanCharacterState extends State<BeastmanCharacter>
   @override
   void initState() {
     super.initState();
-    _floatCtrl = AnimationController(
-      vsync: this, duration: const Duration(milliseconds: 2000),
-    )..repeat(reverse: true);
-    _spinCtrl = AnimationController(
-      vsync: this, duration: const Duration(milliseconds: 1100),
-    );
+    _floatCtrl = AnimationController(vsync: this, duration: const Duration(milliseconds: 2000))
+      ..repeat(reverse: true);
+    _spinCtrl  = AnimationController(vsync: this, duration: const Duration(milliseconds: 1100));
     _floatAnim = CurvedAnimation(parent: _floatCtrl, curve: Curves.easeInOut);
     _spinAnim  = Tween<double>(begin: 0, end: 2 * pi).animate(
-      CurvedAnimation(parent: _spinCtrl, curve: Curves.linear),
-    );
+      CurvedAnimation(parent: _spinCtrl, curve: Curves.linear));
     if (widget.mood == CharacterMood.thinking) _spinCtrl.repeat();
   }
 
@@ -833,10 +618,7 @@ class VibeViewApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         scaffoldBackgroundColor: kBg,
-        colorScheme: const ColorScheme.light(
-          primary: kAccent,
-          surface: kSurface,
-        ),
+        colorScheme: const ColorScheme.light(primary: kAccent, surface: kSurface),
       ),
       home: const HomePage(),
     );
@@ -846,7 +628,6 @@ class VibeViewApp extends StatelessWidget {
 // ── 홈 화면 ───────────────────────────────────────────────
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
-
   @override
   State<HomePage> createState() => _HomePageState();
 }
@@ -858,10 +639,7 @@ class _HomePageState extends State<HomePage> {
 
   Future<void> _analyze() async {
     final url = _urlController.text.trim();
-    if (url.isEmpty) {
-      setState(() => _error = 'YouTube URL을 입력해주세요.');
-      return;
-    }
+    if (url.isEmpty) { setState(() => _error = 'YouTube URL을 입력해주세요.'); return; }
     setState(() { _loading = true; _error = ''; });
     try {
       final res = await http.post(
@@ -872,8 +650,7 @@ class _HomePageState extends State<HomePage> {
       if (res.statusCode == 200) {
         final data = jsonDecode(utf8.decode(res.bodyBytes)) as Map<String, dynamic>;
         if (!mounted) return;
-        Navigator.push(context,
-          MaterialPageRoute(builder: (_) => ResultPage(result: data, url: url)));
+        Navigator.push(context, MaterialPageRoute(builder: (_) => ResultPage(result: data, url: url)));
       } else {
         final err = jsonDecode(res.body) as Map<String, dynamic>;
         setState(() => _error = err['detail']?.toString() ?? '분석 실패 (${res.statusCode})');
@@ -895,72 +672,70 @@ class _HomePageState extends State<HomePage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Row(
-                children: [
-                  Container(
-                    width: 44, height: 44,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(14),
-                      gradient: const LinearGradient(
-                        colors: [kAccent, Color(0xFF00A882)],
-                        begin: Alignment.topLeft, end: Alignment.bottomRight,
-                      ),
-                      boxShadow: [BoxShadow(color: kAccent.withOpacity(0.35),
-                        blurRadius: 12, offset: const Offset(0, 4))],
-                    ),
-                    child: const Center(child: Text('🎬', style: TextStyle(fontSize: 22))),
+              // 헤더
+              Row(children: [
+                Container(
+                  width: 44, height: 44,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(14),
+                    gradient: const LinearGradient(colors: [kAccent, Color(0xFF00A882)],
+                      begin: Alignment.topLeft, end: Alignment.bottomRight),
+                    boxShadow: [BoxShadow(color: kAccent.withOpacity(0.35), blurRadius: 12, offset: const Offset(0, 4))],
                   ),
-                  const SizedBox(width: 12),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text('VibeView', style: TextStyle(color: kText,
-                        fontSize: 20, fontWeight: FontWeight.w800, letterSpacing: -0.5)),
-                      Text('감정이 조회수를 만든다',
-                        style: TextStyle(color: kTextMid, fontSize: 11)),
-                    ],
-                  ),
-                ],
-              ),
-              const SizedBox(height: 20),
-              Center(
-                child: BeastmanCharacter(
-                  mood: _loading ? CharacterMood.thinking : CharacterMood.idle,
-                  size: 130,
+                  child: const Center(child: Text('🎬', style: TextStyle(fontSize: 22))),
                 ),
-              ),
-              const SizedBox(height: 6),
-              Center(
-                child: AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 350),
+                const SizedBox(width: 12),
+                const Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  Text('VibeView', style: TextStyle(color: kText, fontSize: 20,
+                    fontWeight: FontWeight.w800, letterSpacing: -0.5)),
+                  Text('감정이 조회수를 만든다', style: TextStyle(color: kTextMid, fontSize: 11)),
+                ]),
+                const Spacer(),
+                // 트렌드 버튼
+                GestureDetector(
+                  onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const TrendPage())),
                   child: Container(
-                    key: ValueKey(_loading),
-                    padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 9),
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                     decoration: BoxDecoration(
-                      color: _loading ? kAccent3.withOpacity(0.1) : kAccent.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(24),
-                      border: Border.all(
-                        color: _loading ? kAccent3.withOpacity(0.28) : kAccent.withOpacity(0.28),
-                        width: 1.5,
-                      ),
+                      color: kAccent3.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(color: kAccent3.withOpacity(0.3)),
                     ),
-                    child: Text(
-                      _loading ? '영상 분석 중이에요~ 잠깐만요! 🤔' : '안녕! YouTube URL을 입력해줘 👋',
-                      style: TextStyle(
-                        color: _loading ? kAccent3 : kAccent,
-                        fontSize: 13, fontWeight: FontWeight.w600,
-                      ),
-                    ),
+                    child: const Row(mainAxisSize: MainAxisSize.min, children: [
+                      Text('📊', style: TextStyle(fontSize: 14)),
+                      SizedBox(width: 4),
+                      Text('트렌드', style: TextStyle(color: kAccent3, fontSize: 12,
+                        fontWeight: FontWeight.w700)),
+                    ]),
                   ),
                 ),
-              ),
+              ]),
+              const SizedBox(height: 20),
+              Center(child: BeastmanCharacter(
+                mood: _loading ? CharacterMood.thinking : CharacterMood.idle, size: 130)),
+              const SizedBox(height: 6),
+              Center(child: AnimatedSwitcher(
+                duration: const Duration(milliseconds: 350),
+                child: Container(
+                  key: ValueKey(_loading),
+                  padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 9),
+                  decoration: BoxDecoration(
+                    color: _loading ? kAccent3.withOpacity(0.1) : kAccent.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(24),
+                    border: Border.all(
+                      color: _loading ? kAccent3.withOpacity(0.28) : kAccent.withOpacity(0.28), width: 1.5),
+                  ),
+                  child: Text(
+                    _loading ? '영상 분석 중이에요~ 잠깐만요! 🤔' : '안녕! YouTube URL을 입력해줘 👋',
+                    style: TextStyle(color: _loading ? kAccent3 : kAccent,
+                      fontSize: 13, fontWeight: FontWeight.w600),
+                  ),
+                ),
+              )),
               const SizedBox(height: 22),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                decoration: BoxDecoration(
-                  color: kAccent.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(8),
-                ),
+                decoration: BoxDecoration(color: kAccent.withOpacity(0.1), borderRadius: BorderRadius.circular(8)),
                 child: const Text('// ANALYZE VIDEO', style: TextStyle(color: kAccent,
                   fontSize: 10, letterSpacing: 2, fontWeight: FontWeight.w700)),
               ),
@@ -978,21 +753,19 @@ class _HomePageState extends State<HomePage> {
               const SizedBox(height: 16),
               Container(
                 decoration: BoxDecoration(
-                  color: kSurface,
-                  borderRadius: BorderRadius.circular(14),
+                  color: kSurface, borderRadius: BorderRadius.circular(14),
                   border: Border.all(color: kBorder, width: 1.5),
-                  boxShadow: [BoxShadow(color: kAccent.withOpacity(0.07),
-                    blurRadius: 10, offset: const Offset(0, 3))],
+                  boxShadow: [BoxShadow(color: kAccent.withOpacity(0.07), blurRadius: 10, offset: const Offset(0, 3))],
                 ),
                 child: TextField(
                   controller: _urlController,
                   style: const TextStyle(color: kText, fontSize: 13),
                   decoration: InputDecoration(
                     hintText: 'https://youtube.com/shorts/...',
-                    hintStyle: TextStyle(color: kTextDim, fontSize: 13),
+                    hintStyle: const TextStyle(color: kTextDim, fontSize: 13),
                     border: InputBorder.none,
                     contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                    prefixIcon: Icon(Icons.link_rounded, color: kTextDim, size: 20),
+                    prefixIcon: const Icon(Icons.link_rounded, color: kTextDim, size: 20),
                   ),
                   onSubmitted: (_) => _analyze(),
                 ),
@@ -1003,8 +776,7 @@ class _HomePageState extends State<HomePage> {
                 child: DecoratedBox(
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(14),
-                    gradient: _loading ? null
-                        : const LinearGradient(colors: [kAccent, Color(0xFF00A882)]),
+                    gradient: _loading ? null : const LinearGradient(colors: [kAccent, Color(0xFF00A882)]),
                     color: _loading ? kBorder : null,
                     boxShadow: _loading ? [] : [BoxShadow(color: kAccent.withOpacity(0.38),
                       blurRadius: 14, offset: const Offset(0, 5))],
@@ -1012,11 +784,9 @@ class _HomePageState extends State<HomePage> {
                   child: ElevatedButton(
                     onPressed: _loading ? null : _analyze,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.transparent,
-                      shadowColor: Colors.transparent,
+                      backgroundColor: Colors.transparent, shadowColor: Colors.transparent,
                       padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(14)),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                     ),
                     child: _loading
                       ? Row(mainAxisAlignment: MainAxisAlignment.center, children: [
@@ -1024,8 +794,7 @@ class _HomePageState extends State<HomePage> {
                             child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5)),
                           const SizedBox(width: 10),
                           Text('분석 중...', style: TextStyle(
-                            color: Colors.white.withOpacity(0.85),
-                            fontSize: 15, fontWeight: FontWeight.w700)),
+                            color: Colors.white.withOpacity(0.85), fontSize: 15, fontWeight: FontWeight.w700)),
                         ])
                       : const Text('✨ 분석 시작', style: TextStyle(
                           color: Colors.white, fontSize: 15, fontWeight: FontWeight.w700)),
@@ -1036,15 +805,11 @@ class _HomePageState extends State<HomePage> {
                 const SizedBox(height: 10),
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                  decoration: BoxDecoration(
-                    color: kAccent2.withOpacity(0.08),
-                    borderRadius: BorderRadius.circular(10),
-                    border: Border.all(color: kAccent2.withOpacity(0.28)),
-                  ),
+                  decoration: BoxDecoration(color: kAccent2.withOpacity(0.08),
+                    borderRadius: BorderRadius.circular(10), border: Border.all(color: kAccent2.withOpacity(0.28))),
                   child: Row(children: [
                     const Text('⚠️ ', style: TextStyle(fontSize: 14)),
-                    Expanded(child: Text(_error,
-                      style: const TextStyle(color: kAccent2, fontSize: 13))),
+                    Expanded(child: Text(_error, style: const TextStyle(color: kAccent2, fontSize: 13))),
                   ]),
                 ),
               ],
@@ -1052,25 +817,18 @@ class _HomePageState extends State<HomePage> {
                 const SizedBox(height: 14),
                 Container(
                   padding: const EdgeInsets.all(14),
-                  decoration: BoxDecoration(
-                    color: kAccent3.withOpacity(0.07),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: kAccent3.withOpacity(0.18)),
-                  ),
+                  decoration: BoxDecoration(color: kAccent3.withOpacity(0.07),
+                    borderRadius: BorderRadius.circular(12), border: Border.all(color: kAccent3.withOpacity(0.18))),
                   child: const Row(children: [
                     Text('🎬', style: TextStyle(fontSize: 20)),
                     SizedBox(width: 10),
-                    Expanded(child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text('영상 다운로드 → 얼굴 분석 → 음성 분석',
-                          style: TextStyle(color: kTextMid, fontSize: 12,
-                            fontWeight: FontWeight.w600)),
-                        SizedBox(height: 2),
-                        Text('1~3분 정도 소요될 수 있어요',
-                          style: TextStyle(color: kTextDim, fontSize: 11)),
-                      ],
-                    )),
+                    Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                      Text('다운로드 → 얼굴 분석 → 음성 분석 → 장면 분석',
+                        style: TextStyle(color: kTextMid, fontSize: 12, fontWeight: FontWeight.w600)),
+                      SizedBox(height: 2),
+                      Text('1~3분 정도 소요될 수 있어요',
+                        style: TextStyle(color: kTextDim, fontSize: 11)),
+                    ])),
                   ]),
                 ),
               ],
@@ -1080,6 +838,44 @@ class _HomePageState extends State<HomePage> {
       ),
     );
   }
+}
+
+// ── 공통 위젯 헬퍼 ────────────────────────────────────────
+Widget _card({required Widget child, Color? borderColor}) => Container(
+  width: double.infinity, padding: const EdgeInsets.all(16),
+  margin: const EdgeInsets.only(bottom: 16),
+  decoration: BoxDecoration(
+    color: kSurface,
+    borderRadius: BorderRadius.circular(16),
+    border: Border.all(color: borderColor ?? kBorder, width: 1.5),
+    boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 10, offset: const Offset(0, 3))],
+  ),
+  child: child,
+);
+
+Widget _sectionLabel(String text) => Padding(
+  padding: const EdgeInsets.only(bottom: 8),
+  child: Text(text, style: const TextStyle(color: kTextDim, fontSize: 10,
+    letterSpacing: 1.5, fontWeight: FontWeight.w600)),
+);
+
+Widget _miniBar(String label, double value, Color color) {
+  final pct = (value * 100).round();
+  return Padding(
+    padding: const EdgeInsets.only(bottom: 8),
+    child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+        Text(label, style: TextStyle(color: color, fontSize: 12, fontWeight: FontWeight.w600)),
+        Text('$pct%', style: const TextStyle(color: kTextMid, fontSize: 11)),
+      ]),
+      const SizedBox(height: 4),
+      ClipRRect(
+        borderRadius: BorderRadius.circular(3),
+        child: LinearProgressIndicator(value: value, backgroundColor: kBorder,
+          valueColor: AlwaysStoppedAnimation<Color>(color), minHeight: 5),
+      ),
+    ]),
+  );
 }
 
 // ── 결과 화면 ─────────────────────────────────────────────
@@ -1137,24 +933,6 @@ class _ResultPageState extends State<ResultPage> {
     }
   }
 
-  Widget _card({required Widget child}) => Container(
-    width: double.infinity, padding: const EdgeInsets.all(16),
-    margin: const EdgeInsets.only(bottom: 16),
-    decoration: BoxDecoration(
-      color: kSurface, borderRadius: BorderRadius.circular(16),
-      border: Border.all(color: kBorder, width: 1.5),
-      boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04),
-        blurRadius: 10, offset: const Offset(0, 3))],
-    ),
-    child: child,
-  );
-
-  Widget _label(String text) => Padding(
-    padding: const EdgeInsets.only(bottom: 8),
-    child: Text(text, style: const TextStyle(color: kTextDim, fontSize: 10,
-      letterSpacing: 1.5, fontWeight: FontWeight.w600)),
-  );
-
   Widget _emotionBar(String emotion, double value) {
     final color = kEmotionColors[emotion] ?? kTextDim;
     final pct   = (value * 100).round();
@@ -1167,13 +945,9 @@ class _ResultPageState extends State<ResultPage> {
           Text('$pct%', style: const TextStyle(color: kTextMid, fontSize: 12)),
         ]),
         const SizedBox(height: 5),
-        ClipRRect(
-          borderRadius: BorderRadius.circular(4),
-          child: LinearProgressIndicator(
-            value: value, backgroundColor: kBorder,
-            valueColor: AlwaysStoppedAnimation<Color>(color), minHeight: 7,
-          ),
-        ),
+        ClipRRect(borderRadius: BorderRadius.circular(4),
+          child: LinearProgressIndicator(value: value, backgroundColor: kBorder,
+            valueColor: AlwaysStoppedAnimation<Color>(color), minHeight: 7)),
       ]),
     );
   }
@@ -1181,14 +955,13 @@ class _ResultPageState extends State<ResultPage> {
   Widget _statCell(String label, String value) => Expanded(
     child: Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
-      decoration: BoxDecoration(color: kSurface2,
-        borderRadius: BorderRadius.circular(10), border: Border.all(color: kBorder)),
+      decoration: BoxDecoration(color: kSurface2, borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: kBorder)),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Text(label, style: const TextStyle(color: kTextDim, fontSize: 9,
-          letterSpacing: 1, fontWeight: FontWeight.w600)),
+        Text(label, style: const TextStyle(color: kTextDim, fontSize: 9, letterSpacing: 1,
+          fontWeight: FontWeight.w600)),
         const SizedBox(height: 4),
-        Text(value, style: const TextStyle(color: kText, fontSize: 13,
-          fontWeight: FontWeight.w700)),
+        Text(value, style: const TextStyle(color: kText, fontSize: 13, fontWeight: FontWeight.w700)),
       ]),
     ),
   );
@@ -1196,14 +969,12 @@ class _ResultPageState extends State<ResultPage> {
   Widget _infoCard(String label, String value) => Expanded(
     child: Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-      decoration: BoxDecoration(color: kSurface,
-        borderRadius: BorderRadius.circular(12),
+      decoration: BoxDecoration(color: kSurface, borderRadius: BorderRadius.circular(12),
         border: Border.all(color: kBorder, width: 1.5)),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Text(label, style: const TextStyle(color: kTextDim, fontSize: 9, letterSpacing: 1)),
         const SizedBox(height: 4),
-        Text(value, style: const TextStyle(color: kText, fontSize: 15,
-          fontWeight: FontWeight.w800)),
+        Text(value, style: const TextStyle(color: kText, fontSize: 15, fontWeight: FontWeight.w800)),
       ]),
     ),
   );
@@ -1211,26 +982,51 @@ class _ResultPageState extends State<ResultPage> {
   Widget _legendDot(Color color, String label) => Row(
     mainAxisSize: MainAxisSize.min,
     children: [
-      Container(width: 8, height: 8,
-        decoration: BoxDecoration(color: color, shape: BoxShape.circle)),
+      Container(width: 8, height: 8, decoration: BoxDecoration(color: color, shape: BoxShape.circle)),
       const SizedBox(width: 4),
       Text(label, style: const TextStyle(color: kTextDim, fontSize: 10)),
     ],
   );
 
+  String _fmtNum(dynamic n) {
+    if (n == null) return '-';
+    final v = (n as num).toDouble();
+    if (v >= 1000000) return '${(v / 1000000).toStringAsFixed(1)}M';
+    if (v >= 1000)    return '${(v / 1000).toStringAsFixed(1)}K';
+    return v.toStringAsFixed(0);
+  }
+
   @override
   Widget build(BuildContext context) {
-    final videoInfo    = (widget.result['video_info']    as Map<String, dynamic>?) ?? {};
-    final faceSummary  = (widget.result['face_summary']  as Map<String, dynamic>?) ?? {};
-    final audioSummary = (widget.result['audio_summary'] as Map<String, dynamic>?) ?? {};
+    final videoInfo    = (widget.result['video_info']     as Map<String, dynamic>?) ?? {};
+    final ytStats      = (widget.result['youtube_stats']  as Map<String, dynamic>?) ?? {};
+    final faceSummary  = (widget.result['face_summary']   as Map<String, dynamic>?) ?? {};
+    final audioSummary = (widget.result['audio_summary']  as Map<String, dynamic>?) ?? {};
+    final sceneSummary = (widget.result['scene_summary']  as Map<String, dynamic>?) ?? {};
+    final fusionResult = (widget.result['fusion_result']  as Map<String, dynamic>?) ?? {};
+    final viralResult  = (widget.result['viral_result']   as Map<String, dynamic>?) ?? {};
     final timeline     = (widget.result['emotion_timeline'] as List<dynamic>?) ?? [];
-    final emotionDist  = (faceSummary['emotion_distribution'] as Map<String, dynamic>?) ?? {};
-    final peakEmotion  = faceSummary['peak_emotion'] as Map<String, dynamic>?;
+
+    final emotionDist     = (faceSummary['emotion_distribution'] as Map<String, dynamic>?) ?? {};
+    final peakEmotion     = faceSummary['peak_emotion'] as Map<String, dynamic>?;
     final dominantEmotion = peakEmotion?['emotion'] as String? ?? '';
     final dominantColor   = kEmotionColors[dominantEmotion] ?? kAccent;
     final sortedEmotions  = emotionDist.entries.toList()
       ..sort((a, b) => (b.value as num).compareTo(a.value as num));
     final mood = _getMood();
+
+    // 바이럴 등급
+    final grade      = viralResult['grade'] as String? ?? '';
+    final gradeColor = kGradeColors[grade] ?? kTextDim;
+    final viralScore = (viralResult['viral_score'] as num?)?.toStringAsFixed(1) ?? '-';
+
+    // 장면 분위기 분포
+    final vibeColors = [kAccent, kAccent3, kYellow, kAccent2, const Color(0xFF5B9BD5), const Color(0xFFB39DDB)];
+    final vibeDist   = (sceneSummary['vibe_distribution'] as Map<String, dynamic>?) ?? {};
+    final vibeList   = vibeDist.entries.toList()..sort((a, b) => (b.value as num).compareTo(a.value as num));
+
+    // 모달리티 점수
+    final modalityScores = (fusionResult['modality_scores'] as Map<String, dynamic>?) ?? {};
 
     return Scaffold(
       backgroundColor: kBg,
@@ -1243,8 +1039,7 @@ class _ResultPageState extends State<ResultPage> {
         title: const Row(children: [
           Text('🎬', style: TextStyle(fontSize: 18)),
           SizedBox(width: 8),
-          Text('VibeView', style: TextStyle(color: kText, fontSize: 18,
-            fontWeight: FontWeight.w800)),
+          Text('VibeView', style: TextStyle(color: kText, fontSize: 18, fontWeight: FontWeight.w800)),
         ]),
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(1),
@@ -1256,108 +1051,163 @@ class _ResultPageState extends State<ResultPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+
+            // ── 캐릭터 + 감정 배지 ──────────────────────────
             _card(child: Column(children: [
               Center(child: BeastmanCharacter(mood: mood, size: 110)),
               const SizedBox(height: 8),
               Center(child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 decoration: BoxDecoration(
-                  color: dominantColor.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(20),
+                  color: dominantColor.withOpacity(0.1), borderRadius: BorderRadius.circular(20),
                   border: Border.all(color: dominantColor.withOpacity(0.3)),
                 ),
                 child: Text(
                   '${kEmotionKo[dominantEmotion] ?? dominantEmotion} 감정이 가장 강해요! ✨',
-                  style: TextStyle(color: dominantColor, fontSize: 13,
-                    fontWeight: FontWeight.w700),
+                  style: TextStyle(color: dominantColor, fontSize: 13, fontWeight: FontWeight.w700),
                 ),
               )),
             ])),
-            _label('VIDEO INFO'),
-            Container(margin: const EdgeInsets.only(bottom: 16),
-              child: Column(children: [
+
+            // ── YouTube 통계 ─────────────────────────────────
+            if (ytStats.isNotEmpty) ...[
+              _sectionLabel('YOUTUBE STATS'),
+              _card(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  // 썸네일
+                  if (ytStats['thumbnail_url'] != null)
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(8),
+                      child: Image.network(
+                        ytStats['thumbnail_url'] as String,
+                        width: 100, height: 60, fit: BoxFit.cover,
+                        errorBuilder: (_, __, ___) => Container(
+                          width: 100, height: 60, color: kSurface2,
+                          child: const Icon(Icons.image_not_supported, color: kTextDim)),
+                      ),
+                    ),
+                  const SizedBox(width: 12),
+                  Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                    if (ytStats['title'] != null)
+                      Text(ytStats['title'] as String,
+                        style: const TextStyle(color: kText, fontSize: 13, fontWeight: FontWeight.w700, height: 1.4),
+                        maxLines: 2, overflow: TextOverflow.ellipsis),
+                    if (ytStats['channel'] != null) ...[
+                      const SizedBox(height: 4),
+                      Text('@ ${ytStats['channel']}',
+                        style: const TextStyle(color: kAccent, fontSize: 11, fontWeight: FontWeight.w600)),
+                    ],
+                  ])),
+                ]),
+                const SizedBox(height: 12),
                 Row(children: [
-                  _infoCard('DURATION', '${(videoInfo['duration'] as num?)?.toStringAsFixed(1)}s'),
+                  _statCell('VIEWS',    _fmtNum(ytStats['view_count'])),
                   const SizedBox(width: 8),
-                  _infoCard('FPS', '${(videoInfo['fps'] as num?)?.toStringAsFixed(0)}'),
+                  _statCell('LIKES',    _fmtNum(ytStats['like_count'])),
                   const SizedBox(width: 8),
-                  _infoCard('FRAMES', '${videoInfo['total_frames']}'),
+                  _statCell('COMMENTS', _fmtNum(ytStats['comment_count'])),
                 ]),
                 const SizedBox(height: 8),
                 Row(children: [
-                  _infoCard('RESOLUTION', '${videoInfo['width']}×${videoInfo['height']}'),
+                  _statCell('VIEWS/DAY', ytStats['views_per_day'] != null
+                    ? _fmtNum((ytStats['views_per_day'] as num).round())
+                    : '-'),
+                  const SizedBox(width: 8),
+                  _statCell('DAYS UP', ytStats['days_since_upload'] != null
+                    ? '${ytStats['days_since_upload']}d'
+                    : '-'),
+                  const SizedBox(width: 8),
+                  _statCell('VIDEO ID', ytStats['video_id'] != null
+                    ? '${(ytStats['video_id'] as String).substring(0, min(8, (ytStats['video_id'] as String).length))}…'
+                    : '-'),
                 ]),
+                // 태그
+                if (ytStats['tags'] != null && (ytStats['tags'] as List).isNotEmpty) ...[
+                  const SizedBox(height: 10),
+                  Wrap(spacing: 6, runSpacing: 6,
+                    children: ((ytStats['tags'] as List).take(5)).map((t) => Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                      decoration: BoxDecoration(color: kSurface2, borderRadius: BorderRadius.circular(6),
+                        border: Border.all(color: kBorder)),
+                      child: Text('#$t', style: const TextStyle(color: kTextMid, fontSize: 11)),
+                    )).toList()),
+                ],
+              ])),
+            ],
+
+            // ── 비디오 기본 정보 ─────────────────────────────
+            _sectionLabel('VIDEO INFO'),
+            Container(margin: const EdgeInsets.only(bottom: 16), child: Column(children: [
+              Row(children: [
+                _infoCard('DURATION', '${(videoInfo['duration'] as num?)?.toStringAsFixed(1)}s'),
+                const SizedBox(width: 8),
+                _infoCard('FPS', '${(videoInfo['fps'] as num?)?.toStringAsFixed(0)}'),
+                const SizedBox(width: 8),
+                _infoCard('FRAMES', '${videoInfo['total_frames']}'),
               ]),
-            ),
-            _label('FACE ANALYSIS'),
+              const SizedBox(height: 8),
+              Row(children: [_infoCard('RESOLUTION', '${videoInfo['width']}×${videoInfo['height']}')]),
+            ])),
+
+            // ── 얼굴 감정 ────────────────────────────────────
+            _sectionLabel('FACE ANALYSIS'),
             _card(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-                const Text('얼굴 감정 분석', style: TextStyle(color: kText,
-                  fontSize: 15, fontWeight: FontWeight.w700)),
+                const Text('얼굴 감정 분석', style: TextStyle(color: kText, fontSize: 15, fontWeight: FontWeight.w700)),
                 Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
                   const Text('VALENCE', style: TextStyle(color: kTextDim, fontSize: 10)),
                   Text((faceSummary['avg_valence'] as num?)?.toStringAsFixed(2) ?? '-',
-                    style: const TextStyle(color: kAccent, fontSize: 18,
-                      fontWeight: FontWeight.w800)),
+                    style: const TextStyle(color: kAccent, fontSize: 18, fontWeight: FontWeight.w800)),
                 ]),
               ]),
               const SizedBox(height: 14),
-              for (final e in sortedEmotions)
-                _emotionBar(e.key, (e.value as num).toDouble()),
+              for (final e in sortedEmotions) _emotionBar(e.key, (e.value as num).toDouble()),
               if (peakEmotion != null)
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                   decoration: BoxDecoration(
-                    color: dominantColor.withOpacity(0.07),
-                    borderRadius: BorderRadius.circular(10),
+                    color: dominantColor.withOpacity(0.07), borderRadius: BorderRadius.circular(10),
                     border: Border.all(color: dominantColor.withOpacity(0.22)),
                   ),
                   child: Row(children: [
-                    const Text('🏆 PEAK  ',
-                      style: TextStyle(color: kTextDim, fontSize: 11)),
+                    const Text('🏆 PEAK  ', style: TextStyle(color: kTextDim, fontSize: 11)),
                     Text(kEmotionKo[dominantEmotion] ?? dominantEmotion,
-                      style: TextStyle(color: dominantColor, fontSize: 14,
-                        fontWeight: FontWeight.w700)),
+                      style: TextStyle(color: dominantColor, fontSize: 14, fontWeight: FontWeight.w700)),
                     const Spacer(),
                     Text('@ ${(peakEmotion['timestamp'] as num?)?.toStringAsFixed(1)}s',
                       style: const TextStyle(color: kTextMid, fontSize: 12)),
                   ]),
                 ),
             ])),
-            _label('AUDIO ANALYSIS'),
+
+            // ── 음성 감정 ────────────────────────────────────
+            _sectionLabel('AUDIO ANALYSIS'),
             _card(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-                const Text('음성 감정 분석', style: TextStyle(color: kText,
-                  fontSize: 15, fontWeight: FontWeight.w700)),
+                const Text('음성 감정 분석', style: TextStyle(color: kText, fontSize: 15, fontWeight: FontWeight.w700)),
                 Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
                   const Text('VALENCE', style: TextStyle(color: kTextDim, fontSize: 10)),
                   Text((audioSummary['avg_valence'] as num?)?.toStringAsFixed(2) ?? '-',
-                    style: const TextStyle(color: kAccent3, fontSize: 18,
-                      fontWeight: FontWeight.w800)),
+                    style: const TextStyle(color: kAccent3, fontSize: 18, fontWeight: FontWeight.w800)),
                 ]),
               ]),
               const SizedBox(height: 14),
               Row(children: [
                 _statCell('DOMINANT',
-                  kEmotionKo[audioSummary['dominant_emotion']] ??
-                  audioSummary['dominant_emotion']?.toString() ?? '-'),
+                  kEmotionKo[audioSummary['dominant_emotion']] ?? audioSummary['dominant_emotion']?.toString() ?? '-'),
                 const SizedBox(width: 8),
-                _statCell('TEMPO',
-                  '${(audioSummary['tempo'] as num?)?.toStringAsFixed(0) ?? '-'} BPM'),
+                _statCell('TEMPO', '${(audioSummary['tempo'] as num?)?.toStringAsFixed(0) ?? '-'} BPM'),
                 const SizedBox(width: 8),
-                _statCell('LANGUAGE',
-                  (audioSummary['language'] as String?)?.toUpperCase() ?? '-'),
+                _statCell('LANGUAGE', (audioSummary['language'] as String?)?.toUpperCase() ?? '-'),
               ]),
               if ((audioSummary['full_text'] as String?)?.isNotEmpty == true) ...[
                 const SizedBox(height: 12),
                 Container(
                   padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(color: kSurface2,
-                    borderRadius: BorderRadius.circular(10),
+                  decoration: BoxDecoration(color: kSurface2, borderRadius: BorderRadius.circular(10),
                     border: Border.all(color: kBorder)),
                   child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                    const Text('💬 TRANSCRIPT', style: TextStyle(color: kTextDim,
-                      fontSize: 10, letterSpacing: 1)),
+                    const Text('💬 TRANSCRIPT', style: TextStyle(color: kTextDim, fontSize: 10, letterSpacing: 1)),
                     const SizedBox(height: 6),
                     Text(audioSummary['full_text'] as String,
                       style: const TextStyle(color: kTextMid, fontSize: 13, height: 1.5)),
@@ -1365,12 +1215,225 @@ class _ResultPageState extends State<ResultPage> {
                 ),
               ],
             ])),
-            if (timeline.isNotEmpty) ...[
-              _label('EMOTION TIMELINE'),
+
+            // ── 장면 분석 ────────────────────────────────────
+            if (sceneSummary.isNotEmpty) ...[
+              _sectionLabel('SCENE ANALYSIS'),
               _card(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                Text('📊 총 ${timeline.length}개 구간 분석됨',
-                  style: const TextStyle(color: kTextMid, fontSize: 13,
-                    fontWeight: FontWeight.w600)),
+                Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+                  const Text('장면 분위기 분석', style: TextStyle(color: kText, fontSize: 15, fontWeight: FontWeight.w700)),
+                  if (sceneSummary['dominant_vibe'] != null)
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      decoration: BoxDecoration(color: kYellow.withOpacity(0.12),
+                        borderRadius: BorderRadius.circular(8), border: Border.all(color: kYellow.withOpacity(0.35))),
+                      child: Text(sceneSummary['dominant_vibe'] as String,
+                        style: const TextStyle(color: Color(0xFFC8991A), fontSize: 12, fontWeight: FontWeight.w700)),
+                    ),
+                ]),
+                const SizedBox(height: 14),
+                // 콘텐츠 유형 + 인물 비율
+                Row(children: [
+                  _statCell('CONTENT TYPE', sceneSummary['content_type']?.toString() ?? '-'),
+                  const SizedBox(width: 8),
+                  _statCell('PERSON RATIO',
+                    (sceneSummary['object_stats'] as Map?)?.containsKey('person_ratio') == true
+                      ? '${((sceneSummary['object_stats']['person_ratio'] as num) * 100).round()}%'
+                      : '-'),
+                  const SizedBox(width: 8),
+                  _statCell('AVG PERSONS',
+                    (sceneSummary['object_stats'] as Map?)?.containsKey('avg_person_count') == true
+                      ? (sceneSummary['object_stats']['avg_person_count'] as num).toStringAsFixed(1)
+                      : '-'),
+                ]),
+                // 분위기 분포 바
+                if (vibeList.isNotEmpty) ...[
+                  const SizedBox(height: 14),
+                  const Text('VIBE DISTRIBUTION', style: TextStyle(color: kTextDim, fontSize: 10, letterSpacing: 1)),
+                  const SizedBox(height: 8),
+                  for (int i = 0; i < vibeList.length; i++)
+                    _miniBar(vibeList[i].key, (vibeList[i].value as num).toDouble(),
+                      vibeColors[i % vibeColors.length]),
+                ],
+              ])),
+            ],
+
+            // ── 융합 결과 ────────────────────────────────────
+            if (fusionResult.isNotEmpty) ...[
+              _sectionLabel('FUSION RESULT'),
+              _card(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+                  const Text('멀티모달 융합 결과', style: TextStyle(color: kText, fontSize: 15, fontWeight: FontWeight.w700)),
+                  if (fusionResult['fused_emotion'] != null)
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      decoration: BoxDecoration(color: kAccent3.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(8), border: Border.all(color: kAccent3.withOpacity(0.3))),
+                      child: Text(fusionResult['fused_emotion'] as String,
+                        style: const TextStyle(color: kAccent3, fontSize: 12, fontWeight: FontWeight.w700)),
+                    ),
+                ]),
+                const SizedBox(height: 14),
+                // 신뢰도 바
+                if (fusionResult['confidence'] != null) ...[
+                  Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+                    const Text('CONFIDENCE', style: TextStyle(color: kTextDim, fontSize: 10, letterSpacing: 1)),
+                    Text('${((fusionResult['confidence'] as num) * 100).round()}%',
+                      style: const TextStyle(color: kAccent3, fontSize: 12, fontWeight: FontWeight.w700)),
+                  ]),
+                  const SizedBox(height: 6),
+                  ClipRRect(borderRadius: BorderRadius.circular(4),
+                    child: LinearProgressIndicator(
+                      value: (fusionResult['confidence'] as num).toDouble(),
+                      backgroundColor: kBorder,
+                      valueColor: const AlwaysStoppedAnimation<Color>(kAccent3),
+                      minHeight: 7,
+                    )),
+                  const SizedBox(height: 14),
+                ],
+                // 모달리티 점수
+                if (modalityScores.isNotEmpty) ...[
+                  const Text('MODALITY SCORES', style: TextStyle(color: kTextDim, fontSize: 10, letterSpacing: 1)),
+                  const SizedBox(height: 8),
+                  Row(children: [
+                    _statCell('FACE',  '${((modalityScores['face']  as num? ?? 0) * 100).round()}%'),
+                    const SizedBox(width: 8),
+                    _statCell('AUDIO', '${((modalityScores['audio'] as num? ?? 0) * 100).round()}%'),
+                    const SizedBox(width: 8),
+                    _statCell('SCENE', '${((modalityScores['scene'] as num? ?? 0) * 100).round()}%'),
+                  ]),
+                ],
+                // Vibe 태그
+                if (fusionResult['vibe_tags'] != null && (fusionResult['vibe_tags'] as List).isNotEmpty) ...[
+                  const SizedBox(height: 12),
+                  Wrap(spacing: 6, runSpacing: 6,
+                    children: (fusionResult['vibe_tags'] as List).map((t) => Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: kAccent3.withOpacity(0.08), borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: kAccent3.withOpacity(0.3)),
+                      ),
+                      child: Text(t.toString(), style: const TextStyle(color: kAccent3, fontSize: 11)),
+                    )).toList()),
+                ],
+              ])),
+            ],
+
+            // ── 바이럴 점수 ──────────────────────────────────
+            if (viralResult.isNotEmpty) ...[
+              _sectionLabel('VIRAL PREDICTOR'),
+              _card(
+                borderColor: gradeColor.withOpacity(0.35),
+                child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  Row(children: [
+                    // 등급 뱃지
+                    Container(
+                      width: 52, height: 52,
+                      decoration: BoxDecoration(
+                        color: gradeColor.withOpacity(0.1), borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: gradeColor.withOpacity(0.5), width: 2),
+                      ),
+                      child: Center(child: Text(grade,
+                        style: TextStyle(color: gradeColor, fontSize: 24, fontWeight: FontWeight.w800))),
+                    ),
+                    const SizedBox(width: 14),
+                    Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                      const Text('VIRAL PREDICTOR', style: TextStyle(color: kTextDim, fontSize: 10, letterSpacing: 1)),
+                      const Text('바이럴 예측 점수', style: TextStyle(color: kText, fontSize: 15, fontWeight: FontWeight.w700)),
+                    ]),
+                    const Spacer(),
+                    Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
+                      const Text('SCORE', style: TextStyle(color: kTextDim, fontSize: 10)),
+                      Text(viralScore, style: TextStyle(color: gradeColor, fontSize: 26, fontWeight: FontWeight.w800)),
+                    ]),
+                  ]),
+                  const SizedBox(height: 16),
+                  // 팩터 바
+                  if (viralResult['factors'] != null) ...[
+                    const Text('FACTOR BREAKDOWN', style: TextStyle(color: kTextDim, fontSize: 10, letterSpacing: 1)),
+                    const SizedBox(height: 8),
+                    _miniBar('감정 강도',   ((viralResult['factors']['emotional_intensity']   as num?) ?? 0).toDouble(), gradeColor),
+                    _miniBar('감정 일관성', ((viralResult['factors']['emotional_consistency'] as num?) ?? 0).toDouble(), gradeColor),
+                    _miniBar('콘텐츠 매력', ((viralResult['factors']['content_appeal']        as num?) ?? 0).toDouble(), gradeColor),
+                    _miniBar('페이싱',      ((viralResult['factors']['pacing']                as num?) ?? 0).toDouble(), gradeColor),
+                    _miniBar('하이라이트',  ((viralResult['factors']['highlight_density']     as num?) ?? 0).toDouble(), gradeColor),
+                    const SizedBox(height: 4),
+                  ],
+                  // 강점 / 약점
+                  if (viralResult['strong_points'] != null || viralResult['weak_points'] != null) ...[
+                    Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                      if (viralResult['strong_points'] != null)
+                        Expanded(child: Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(color: kAccent.withOpacity(0.06),
+                            borderRadius: BorderRadius.circular(10), border: Border.all(color: kAccent.withOpacity(0.2))),
+                          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                            const Text('✦ 강점', style: TextStyle(color: kAccent, fontSize: 10,
+                              letterSpacing: 1, fontWeight: FontWeight.w700)),
+                            const SizedBox(height: 6),
+                            for (final pt in (viralResult['strong_points'] as List))
+                              Padding(padding: const EdgeInsets.only(bottom: 4),
+                                child: Text('· $pt', style: const TextStyle(color: kTextMid, fontSize: 11, height: 1.4))),
+                          ]),
+                        )),
+                      const SizedBox(width: 8),
+                      if (viralResult['weak_points'] != null)
+                        Expanded(child: Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(color: kAccent2.withOpacity(0.06),
+                            borderRadius: BorderRadius.circular(10), border: Border.all(color: kAccent2.withOpacity(0.2))),
+                          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                            const Text('✦ 약점', style: TextStyle(color: kAccent2, fontSize: 10,
+                              letterSpacing: 1, fontWeight: FontWeight.w700)),
+                            const SizedBox(height: 6),
+                            for (final pt in (viralResult['weak_points'] as List))
+                              Padding(padding: const EdgeInsets.only(bottom: 4),
+                                child: Text('· $pt', style: const TextStyle(color: kTextMid, fontSize: 11, height: 1.4))),
+                          ]),
+                        )),
+                    ]),
+                    const SizedBox(height: 10),
+                  ],
+                  // 추천
+                  if (viralResult['recommendation'] != null)
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: gradeColor.withOpacity(0.06), borderRadius: BorderRadius.circular(10),
+                        border: Border.all(color: gradeColor.withOpacity(0.2)),
+                      ),
+                      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                        Text('💡 RECOMMENDATION', style: TextStyle(color: gradeColor, fontSize: 10, letterSpacing: 1)),
+                        const SizedBox(height: 6),
+                        Text(viralResult['recommendation'] as String,
+                          style: const TextStyle(color: kTextMid, fontSize: 12, height: 1.5)),
+                      ]),
+                    ),
+                ]),
+              ),
+            ],
+
+            // ── 감정 타임라인 ────────────────────────────────
+            if (timeline.isNotEmpty) ...[
+              _sectionLabel('EMOTION TIMELINE'),
+              _card(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+                  Text('📊 총 ${timeline.length}개 구간 분석됨',
+                    style: const TextStyle(color: kTextMid, fontSize: 13, fontWeight: FontWeight.w600)),
+                  GestureDetector(
+                    onTap: () => Navigator.push(context, MaterialPageRoute(
+                      builder: (_) => TimelineViewerPage(timeline: timeline))),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      decoration: BoxDecoration(
+                        gradient: const LinearGradient(colors: [kAccent, Color(0xFF6C63FF)]),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: const Text('🔍 장면 검증',
+                        style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w700)),
+                    ),
+                  ),
+                ]),
                 const SizedBox(height: 12),
                 SizedBox(
                   height: 64,
@@ -1389,9 +1452,7 @@ class _ResultPageState extends State<ResultPage> {
                           child: Container(
                             width: 5, height: h,
                             decoration: BoxDecoration(
-                              color: c.withOpacity(0.82),
-                              borderRadius: BorderRadius.circular(3),
-                            ),
+                              color: c.withOpacity(0.82), borderRadius: BorderRadius.circular(3)),
                           ),
                         ),
                       );
@@ -1408,37 +1469,32 @@ class _ResultPageState extends State<ResultPage> {
                 ]),
               ])),
             ],
-            _label('GEMINI AI COACH'),
+
+            // ── AI 코치 ──────────────────────────────────────
+            _sectionLabel('GEMINI AI COACH'),
             _card(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-                const Text('AI 감정 코치 피드백', style: TextStyle(color: kText,
-                  fontSize: 15, fontWeight: FontWeight.w700)),
+                const Text('AI 감정 코치 피드백', style: TextStyle(color: kText, fontSize: 15, fontWeight: FontWeight.w700)),
                 DecoratedBox(
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(12),
-                    gradient: _coachLoading ? null
-                        : const LinearGradient(colors: [kAccent3, kAccent2]),
+                    gradient: _coachLoading ? null : const LinearGradient(colors: [kAccent3, kAccent2]),
                     color: _coachLoading ? kBorder : null,
-                    boxShadow: _coachLoading ? [] : [BoxShadow(
-                      color: kAccent3.withOpacity(0.32),
+                    boxShadow: _coachLoading ? [] : [BoxShadow(color: kAccent3.withOpacity(0.32),
                       blurRadius: 8, offset: const Offset(0, 3))],
                   ),
                   child: ElevatedButton(
                     onPressed: _coachLoading ? null : _getCoach,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.transparent,
-                      shadowColor: Colors.transparent,
+                      backgroundColor: Colors.transparent, shadowColor: Colors.transparent,
                       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12)),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                     ),
                     child: _coachLoading
                       ? const SizedBox(width: 14, height: 14,
-                          child: CircularProgressIndicator(
-                            color: Colors.white, strokeWidth: 2))
+                          child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
                       : const Text('🤖 AI 코치', style: TextStyle(
-                          color: Colors.white, fontSize: 12,
-                          fontWeight: FontWeight.w700)),
+                          color: Colors.white, fontSize: 12, fontWeight: FontWeight.w700)),
                   ),
                 ),
               ]),
@@ -1446,31 +1502,575 @@ class _ResultPageState extends State<ResultPage> {
               if (_coachFeedback.isNotEmpty)
                 Container(
                   padding: const EdgeInsets.all(14),
-                  decoration: BoxDecoration(
-                    color: kAccent3.withOpacity(0.06),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: kAccent3.withOpacity(0.18)),
-                  ),
-                  child: Text(_coachFeedback, style: const TextStyle(
-                    color: kTextMid, fontSize: 13, height: 1.7)),
+                  decoration: BoxDecoration(color: kAccent3.withOpacity(0.06),
+                    borderRadius: BorderRadius.circular(12), border: Border.all(color: kAccent3.withOpacity(0.18))),
+                  child: Text(_coachFeedback, style: const TextStyle(color: kTextMid, fontSize: 13, height: 1.7)),
                 )
               else
                 Container(
                   width: double.infinity, padding: const EdgeInsets.all(20),
-                  decoration: BoxDecoration(color: kSurface2,
-                    borderRadius: BorderRadius.circular(12),
+                  decoration: BoxDecoration(color: kSurface2, borderRadius: BorderRadius.circular(12),
                     border: Border.all(color: kBorder)),
-                  child: const Text(
-                    'AI 코치 버튼을 눌러\nGemini의 피드백을 받아보세요 🎯',
-                    style: TextStyle(color: kTextDim, fontSize: 13, height: 1.6),
-                    textAlign: TextAlign.center,
-                  ),
+                  child: const Text('AI 코치 버튼을 눌러\nGemini의 피드백을 받아보세요 🎯',
+                    style: TextStyle(color: kTextDim, fontSize: 13, height: 1.6), textAlign: TextAlign.center),
                 ),
             ])),
             const SizedBox(height: 16),
           ],
         ),
       ),
+    );
+  }
+}
+
+// ── 타임라인 장면 검증 화면 ───────────────────────────────
+class TimelineViewerPage extends StatefulWidget {
+  final List<dynamic> timeline;
+  const TimelineViewerPage({super.key, required this.timeline});
+
+  @override
+  State<TimelineViewerPage> createState() => _TimelineViewerPageState();
+}
+
+class _TimelineViewerPageState extends State<TimelineViewerPage> {
+  int _selectedIdx = 0;
+
+  Map<String, dynamic> get _selected =>
+      widget.timeline[_selectedIdx] as Map<String, dynamic>;
+
+  // 바 높이 계산
+  double _barHeight(double v, double maxH) =>
+      ((v + 1) / 2 * (maxH - 10) + 5).clamp(5.0, maxH);
+
+  Color _barColor(double v) =>
+      v > 0.2 ? kAccent : v < -0.2 ? kAccent2 : kYellow;
+
+  @override
+  Widget build(BuildContext context) {
+    final total = widget.timeline.length;
+    final ts    = (_selected['timestamp'] as num?)?.toStringAsFixed(1) ?? '-';
+    final faceEmo   = _selected['face_emotion'] as String? ?? '';
+    final audioEmo  = _selected['audio_emotion'] as String? ?? '';
+    final faceVal   = (_selected['face_valence']  as num?)?.toDouble() ?? 0.0;
+    final audioVal  = (_selected['audio_valence'] as num?)?.toDouble() ?? 0.0;
+    final audioEng  = (_selected['audio_energy']  as num?)?.toDouble() ?? 0.0;
+    final frameUrl  = _selected['frame_url'] as String? ?? '';
+    final faceColor = kEmotionColors[faceEmo]  ?? kTextDim;
+
+    return Scaffold(
+      backgroundColor: kBg,
+      appBar: AppBar(
+        backgroundColor: kSurface, elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios_rounded, color: kText, size: 20),
+          onPressed: () => Navigator.pop(context),
+        ),
+        title: const Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Text('장면 검증', style: TextStyle(color: kText, fontSize: 16, fontWeight: FontWeight.w800)),
+          Text('TIMELINE VIEWER', style: TextStyle(color: kTextDim, fontSize: 10, letterSpacing: 1)),
+        ]),
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(1),
+          child: Container(height: 1, color: kBorder)),
+      ),
+      body: Column(children: [
+
+        // ── 타임라인 터치 바 차트 ────────────────────────
+        Container(
+          color: kSurface,
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+              const Text('EMOTION TIMELINE',
+                style: TextStyle(color: kTextDim, fontSize: 10, letterSpacing: 1.5, fontWeight: FontWeight.w600)),
+              Text('${_selectedIdx + 1} / $total  |  ${ts}s',
+                style: const TextStyle(color: kAccent, fontSize: 11, fontWeight: FontWeight.w700)),
+            ]),
+            const SizedBox(height: 6),
+            GestureDetector(
+              onTapDown: (d) => _onChartTouch(d.localPosition.dx, context),
+              onHorizontalDragUpdate: (d) => _onChartTouch(d.localPosition.dx, context),
+              child: SizedBox(
+                height: 60,
+                child: LayoutBuilder(builder: (ctx, constraints) {
+                  return Row(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: List.generate(total, (i) {
+                      final t = widget.timeline[i] as Map<String, dynamic>;
+                      final v = (t['face_valence'] as num?)?.toDouble() ?? 0.0;
+                      final h = _barHeight(v, 56);
+                      final c = _barColor(v);
+                      final isSelected = i == _selectedIdx;
+                      return Expanded(
+                        child: Container(
+                          height: h,
+                          margin: const EdgeInsets.symmetric(horizontal: 0.8),
+                          decoration: BoxDecoration(
+                            color: isSelected ? Colors.white : c.withOpacity(0.75),
+                            borderRadius: BorderRadius.circular(2),
+                            border: isSelected ? Border.all(color: kAccent, width: 1.5) : null,
+                          ),
+                        ),
+                      );
+                    }),
+                  );
+                }),
+              ),
+            ),
+            const SizedBox(height: 5),
+            Row(children: [
+              _legendDot(kAccent, '긍정'),
+              const SizedBox(width: 10),
+              _legendDot(kYellow, '중립'),
+              const SizedBox(width: 10),
+              _legendDot(kAccent2, '부정'),
+              const Spacer(),
+              const Text('← 드래그하거나 탭하세요',
+                style: TextStyle(color: kTextDim, fontSize: 10)),
+            ]),
+          ]),
+        ),
+
+        // ── 프레임 이미지 + 감정 정보 (스크롤 없이 한 화면) ──
+        Expanded(
+          child: Padding(
+            padding: const EdgeInsets.all(12),
+            child: Column(children: [
+
+              // 시점 배지
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                decoration: BoxDecoration(
+                  color: kAccent.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: kAccent.withOpacity(0.3)),
+                ),
+                child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+                  Text('$ts초 시점',
+                    style: const TextStyle(color: kAccent, fontSize: 14, fontWeight: FontWeight.w800)),
+                  const SizedBox(width: 10),
+                  Text('(${_selectedIdx + 1} / $total)',
+                    style: const TextStyle(color: kTextMid, fontSize: 12)),
+                ]),
+              ),
+              const SizedBox(height: 10),
+
+              // 프레임 이미지 + 감정 정보를 Row로 나란히
+              Expanded(
+                child: Row(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+
+                  // 프레임 이미지 (왼쪽)
+                  Expanded(
+                    flex: 5,
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(12),
+                      child: Container(
+                        decoration: BoxDecoration(
+                          border: Border.all(color: kAccent, width: 2),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(10),
+                          child: frameUrl.isNotEmpty
+                            ? Image.network(
+                                'http://10.0.2.2:8000$frameUrl',
+                                fit: BoxFit.cover,
+                                loadingBuilder: (ctx, child, progress) => progress == null
+                                  ? child
+                                  : Container(color: kSurface2,
+                                      child: const Center(child: CircularProgressIndicator(color: kAccent, strokeWidth: 2))),
+                                errorBuilder: (_, __, ___) => Container(
+                                  color: kSurface2,
+                                  child: const Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+                                    Icon(Icons.image_not_supported_outlined, color: kTextDim, size: 32),
+                                    SizedBox(height: 6),
+                                    Text('이미지 없음', style: TextStyle(color: kTextDim, fontSize: 11)),
+                                  ]),
+                                ),
+                              )
+                            : Container(
+                                color: kSurface2,
+                                child: const Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+                                  Icon(Icons.image_outlined, color: kTextDim, size: 32),
+                                  SizedBox(height: 6),
+                                  Text('이미지 없음', style: TextStyle(color: kTextDim, fontSize: 11)),
+                                ]),
+                              ),
+                        ),
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(width: 10),
+
+                  // 감정 수치 (오른쪽)
+                  Expanded(
+                    flex: 4,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: [
+                        // 감정 항목
+                        for (final item in [
+                          {'label': '얼굴 감정', 'value': kEmotionKo[faceEmo] ?? faceEmo, 'score': faceVal, 'color': faceColor},
+                          {'label': '음성 감정', 'value': kEmotionKo[audioEmo] ?? audioEmo, 'score': audioVal, 'color': kAccent3},
+                          {'label': '음성 에너지', 'value': '', 'score': audioEng, 'color': kYellow},
+                        ])
+                          Container(
+                            padding: const EdgeInsets.all(10),
+                            decoration: BoxDecoration(
+                              color: kSurface,
+                              borderRadius: BorderRadius.circular(10),
+                              border: Border.all(color: kBorder),
+                            ),
+                            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                              Text(item['label'] as String,
+                                style: TextStyle(color: item['color'] as Color,
+                                  fontSize: 10, fontWeight: FontWeight.w700, letterSpacing: 0.5)),
+                              const SizedBox(height: 4),
+                              Text(
+                                item['value'] != '' ? item['value'] as String : '-',
+                                style: const TextStyle(color: kText, fontSize: 13, fontWeight: FontWeight.w800),
+                              ),
+                              const SizedBox(height: 4),
+                              ClipRRect(
+                                borderRadius: BorderRadius.circular(2),
+                                child: LinearProgressIndicator(
+                                  value: ((item['score'] as double) + 1) / 2,
+                                  backgroundColor: kBorder,
+                                  valueColor: AlwaysStoppedAnimation<Color>(item['color'] as Color),
+                                  minHeight: 5,
+                                ),
+                              ),
+                              const SizedBox(height: 2),
+                              Text('${(item['score'] as double).toStringAsFixed(2)}',
+                                style: const TextStyle(color: kTextDim, fontSize: 10)),
+                            ]),
+                          ),
+
+                        // 이전 / 다음
+                        Row(children: [
+                          Expanded(child: GestureDetector(
+                            onTap: _selectedIdx > 0 ? () => setState(() => _selectedIdx--) : null,
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(vertical: 10),
+                              decoration: BoxDecoration(
+                                color: _selectedIdx > 0 ? kSurface2 : kBorder,
+                                borderRadius: BorderRadius.circular(8),
+                                border: Border.all(color: kBorder),
+                              ),
+                              child: Icon(Icons.arrow_back_ios_rounded,
+                                size: 16,
+                                color: _selectedIdx > 0 ? kText : kTextDim),
+                            ),
+                          )),
+                          const SizedBox(width: 6),
+                          Expanded(child: GestureDetector(
+                            onTap: _selectedIdx < total - 1 ? () => setState(() => _selectedIdx++) : null,
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(vertical: 10),
+                              decoration: BoxDecoration(
+                                color: _selectedIdx < total - 1 ? kAccent : kBorder,
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Icon(Icons.arrow_forward_ios_rounded,
+                                size: 16,
+                                color: _selectedIdx < total - 1 ? Colors.white : kTextDim),
+                            ),
+                          )),
+                        ]),
+                      ],
+                    ),
+                  ),
+                ]),
+              ),
+            ]),
+          ),
+        ),
+      ]),
+    );
+  }
+
+  void _onChartTouch(double localX, BuildContext context) {
+    final total = widget.timeline.length;
+    if (total == 0) return;
+    final chartWidth = MediaQuery.of(context).size.width - 32;
+    final ratio = (localX / chartWidth).clamp(0.0, 1.0);
+    final idx = (ratio * (total - 1)).round();
+    if (idx != _selectedIdx) setState(() => _selectedIdx = idx);
+  }
+
+  Widget _legendDot(Color color, String label) => Row(
+    mainAxisSize: MainAxisSize.min,
+    children: [
+      Container(width: 8, height: 8, decoration: BoxDecoration(color: color, shape: BoxShape.circle)),
+      const SizedBox(width: 4),
+      Text(label, style: const TextStyle(color: kTextDim, fontSize: 10)),
+    ],
+  );
+}
+
+// ── 트렌드 화면 ───────────────────────────────────────────
+class TrendPage extends StatefulWidget {
+  const TrendPage({super.key});
+  @override
+  State<TrendPage> createState() => _TrendPageState();
+}
+
+class _TrendPageState extends State<TrendPage> {
+  Map<String, dynamic>? _trend;
+  bool _loading = true;
+  String _error = '';
+
+  @override
+  void initState() {
+    super.initState();
+    _loadTrend();
+  }
+
+  Future<void> _loadTrend() async {
+    setState(() { _loading = true; _error = ''; });
+    try {
+      final res = await http.get(Uri.parse('$kApiBase/api/trend')).timeout(const Duration(seconds: 10));
+      if (res.statusCode == 200) {
+        setState(() { _trend = jsonDecode(utf8.decode(res.bodyBytes)) as Map<String, dynamic>; });
+      } else {
+        setState(() => _error = '트렌드 로딩 실패 (${res.statusCode})');
+      }
+    } catch (e) {
+      setState(() => _error = '서버 연결 실패. 백엔드가 실행 중인지 확인해주세요.');
+    } finally {
+      setState(() => _loading = false);
+    }
+  }
+
+  String _fmtNum(dynamic n) {
+    if (n == null) return '-';
+    final v = (n as num).toDouble();
+    if (v >= 1000000) return '${(v / 1000000).toStringAsFixed(1)}M';
+    if (v >= 1000)    return '${(v / 1000).toStringAsFixed(1)}K';
+    return v.toStringAsFixed(0);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: kBg,
+      appBar: AppBar(
+        backgroundColor: kSurface, elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios_rounded, color: kText, size: 20),
+          onPressed: () => Navigator.pop(context),
+        ),
+        title: const Row(children: [
+          Text('📊', style: TextStyle(fontSize: 18)),
+          SizedBox(width: 8),
+          Text('트렌드', style: TextStyle(color: kText, fontSize: 18, fontWeight: FontWeight.w800)),
+        ]),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh_rounded, color: kTextMid),
+            onPressed: _loadTrend,
+          ),
+        ],
+        bottom: PreferredSize(preferredSize: const Size.fromHeight(1),
+          child: Container(height: 1, color: kBorder)),
+      ),
+      body: _loading
+        ? const Center(child: CircularProgressIndicator(color: kAccent))
+        : _error.isNotEmpty
+          ? Center(child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+              Text(_error, style: const TextStyle(color: kAccent2, fontSize: 13)),
+              const SizedBox(height: 12),
+              ElevatedButton(onPressed: _loadTrend,
+                child: const Text('다시 시도')),
+            ]))
+          : _buildTrendContent(),
+    );
+  }
+
+  Widget _buildTrendContent() {
+    if (_trend == null) return const SizedBox();
+    final trend = _trend!;
+
+    final gradeDist   = (trend['grade_distribution']   as Map<String, dynamic>?) ?? {};
+    final emotionDist = (trend['emotion_distribution'] as Map<String, dynamic>?) ?? {};
+    final topViral    = (trend['top_viral']             as List<dynamic>?)        ?? [];
+    final recent      = (trend['recent_videos']         as List<dynamic>?)        ?? [];
+
+    // 등급 정렬
+    final gradeOrder  = ['S','A','B','C','D'];
+    final gradeList   = gradeOrder.where(gradeDist.containsKey).map((g) =>
+      MapEntry(g, (gradeDist[g] as num).toDouble())).toList();
+
+    // 감정 분포
+    final emotionList = emotionDist.entries.toList();
+
+    final vibeColors = [kAccent, kAccent3, kYellow, kAccent2, const Color(0xFF5B9BD5), const Color(0xFFB39DDB)];
+
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(16),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+
+        // 요약 통계 3칸
+        Row(children: [
+          Expanded(child: _summaryCell('분석 총수', '${trend['total_analyzed'] ?? 0}', kAccent)),
+          const SizedBox(width: 10),
+          Expanded(child: _summaryCell('평균 바이럴', '${(trend['avg_viral_score'] as num?)?.toStringAsFixed(1) ?? '-'}', kAccent3)),
+          const SizedBox(width: 10),
+          Expanded(child: _summaryCell('평균 감정극성', '${(trend['avg_valence'] as num?)?.toStringAsFixed(2) ?? '-'}', kYellow)),
+        ]),
+        const SizedBox(height: 16),
+
+        // 등급 분포
+        _sectionLabel('GRADE DISTRIBUTION'),
+        _card(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          const Text('등급 분포', style: TextStyle(color: kText, fontSize: 15, fontWeight: FontWeight.w700)),
+          const SizedBox(height: 14),
+          if (gradeList.isEmpty)
+            const Text('데이터 없음', style: TextStyle(color: kTextDim, fontSize: 13))
+          else
+            for (final e in gradeList) ...[
+              Row(children: [
+                Container(width: 28, alignment: Alignment.center,
+                  child: Text(e.key, style: TextStyle(color: kGradeColors[e.key] ?? kTextDim,
+                    fontSize: 14, fontWeight: FontWeight.w800))),
+                const SizedBox(width: 8),
+                Expanded(child: ClipRRect(borderRadius: BorderRadius.circular(4),
+                  child: LinearProgressIndicator(value: e.value, backgroundColor: kBorder,
+                    valueColor: AlwaysStoppedAnimation<Color>(kGradeColors[e.key] ?? kTextDim), minHeight: 8))),
+                const SizedBox(width: 8),
+                Text('${(e.value * 100).round()}%',
+                  style: const TextStyle(color: kTextMid, fontSize: 12, fontFamily: 'monospace')),
+              ]),
+              const SizedBox(height: 8),
+            ],
+        ])),
+
+        // 감정 분포
+        _sectionLabel('EMOTION DISTRIBUTION'),
+        _card(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          const Text('감정 분포', style: TextStyle(color: kText, fontSize: 15, fontWeight: FontWeight.w700)),
+          const SizedBox(height: 14),
+          if (emotionList.isEmpty)
+            const Text('데이터 없음', style: TextStyle(color: kTextDim, fontSize: 13))
+          else
+            for (int i = 0; i < emotionList.length; i++)
+              _miniBar(emotionList[i].key, (emotionList[i].value as num).toDouble(),
+                vibeColors[i % vibeColors.length]),
+        ])),
+
+        // 바이럴 상위 영상
+        if (topViral.isNotEmpty) ...[
+          _sectionLabel('TOP VIRAL'),
+          _card(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            const Text('바이럴 상위 영상', style: TextStyle(color: kText, fontSize: 15, fontWeight: FontWeight.w700)),
+            const SizedBox(height: 14),
+            for (int i = 0; i < topViral.length; i++) _topViralItem(topViral[i] as Map, i),
+          ])),
+        ],
+
+        // 최근 분석 기록
+        if (recent.isNotEmpty) ...[
+          _sectionLabel('RECENT ANALYSES'),
+          _card(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            const Text('최근 분석 기록', style: TextStyle(color: kText, fontSize: 15, fontWeight: FontWeight.w700)),
+            const SizedBox(height: 14),
+            for (final v in recent) _recentItem(v as Map),
+          ])),
+        ],
+
+        // 데이터 없음
+        if ((trend['total_analyzed'] ?? 0) == 0)
+          Container(
+            width: double.infinity, padding: const EdgeInsets.all(32),
+            child: const Column(children: [
+              Text('📭', style: TextStyle(fontSize: 40)),
+              SizedBox(height: 12),
+              Text('아직 분석된 영상이 없습니다.\n먼저 영상을 분석해보세요!',
+                style: TextStyle(color: kTextDim, fontSize: 14, height: 1.6), textAlign: TextAlign.center),
+            ]),
+          ),
+
+        const SizedBox(height: 16),
+      ]),
+    );
+  }
+
+  Widget _summaryCell(String label, String value, Color color) => Container(
+    padding: const EdgeInsets.symmetric(vertical: 16),
+    decoration: BoxDecoration(color: kSurface, borderRadius: BorderRadius.circular(12),
+      border: Border.all(color: kBorder, width: 1.5)),
+    child: Column(children: [
+      Text(value, style: TextStyle(color: color, fontSize: 22, fontWeight: FontWeight.w800)),
+      const SizedBox(height: 4),
+      Text(label, style: const TextStyle(color: kTextDim, fontSize: 10, letterSpacing: 0.5),
+        textAlign: TextAlign.center),
+    ]),
+  );
+
+  Widget _topViralItem(Map v, int i) {
+    final grade = v['grade'] as String? ?? '';
+    final gc    = kGradeColors[grade] ?? kTextDim;
+    return Container(
+      margin: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(color: kSurface2, borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: kBorder)),
+      child: Row(children: [
+        Text('#${i + 1}', style: TextStyle(color: gc, fontSize: 13, fontWeight: FontWeight.w800)),
+        const SizedBox(width: 10),
+        if (v['thumbnail_url'] != null)
+          ClipRRect(borderRadius: BorderRadius.circular(6),
+            child: Image.network(v['thumbnail_url'] as String,
+              width: 56, height: 36, fit: BoxFit.cover,
+              errorBuilder: (_, __, ___) => const SizedBox(width: 56, height: 36))),
+        const SizedBox(width: 10),
+        Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Text(v['title']?.toString() ?? '제목 없음',
+            style: const TextStyle(color: kText, fontSize: 12, fontWeight: FontWeight.w600),
+            maxLines: 1, overflow: TextOverflow.ellipsis),
+          const SizedBox(height: 2),
+          Text('${v['channel'] ?? ''} · ${_fmtNum(v['view_count'])} views · ${v['fused_emotion'] ?? ''}',
+            style: const TextStyle(color: kTextDim, fontSize: 10)),
+        ])),
+        const SizedBox(width: 8),
+        Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
+          Text(grade, style: TextStyle(color: gc, fontSize: 14, fontWeight: FontWeight.w800)),
+          Text('${(v['viral_score'] as num?)?.toStringAsFixed(1) ?? '-'}',
+            style: const TextStyle(color: kTextMid, fontSize: 11)),
+        ]),
+      ]),
+    );
+  }
+
+  Widget _recentItem(Map v) {
+    final grade = v['grade'] as String? ?? '';
+    final gc    = kGradeColors[grade] ?? kTextDim;
+    final date  = v['analyzed_at'] != null
+      ? DateTime.tryParse(v['analyzed_at'].toString())?.toLocal().toString().substring(0, 10) ?? '-'
+      : '-';
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        color: kSurface2, borderRadius: BorderRadius.circular(10),
+        border: Border(left: BorderSide(color: gc, width: 3), top: BorderSide(color: kBorder),
+          right: BorderSide(color: kBorder), bottom: BorderSide(color: kBorder)),
+      ),
+      child: Row(children: [
+        Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Text(v['title']?.toString() ?? '제목 없음',
+            style: const TextStyle(color: kText, fontSize: 12, fontWeight: FontWeight.w600),
+            maxLines: 1, overflow: TextOverflow.ellipsis),
+          const SizedBox(height: 2),
+          Text('${v['channel'] ?? ''} · $date',
+            style: const TextStyle(color: kTextDim, fontSize: 10)),
+        ])),
+        const SizedBox(width: 8),
+        Text('$grade ${(v['viral_score'] as num?)?.toStringAsFixed(1) ?? '-'}',
+          style: TextStyle(color: gc, fontSize: 12, fontWeight: FontWeight.w700)),
+      ]),
     );
   }
 }
