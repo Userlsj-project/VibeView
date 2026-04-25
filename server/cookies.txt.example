@@ -1,0 +1,15 @@
+# Netscape HTTP Cookie File
+# yt-dlp 가 YouTube 영상을 다운로드할 때 사용하는 쿠키 파일입니다.
+# 이 파일을 복사하여 cookies.txt 로 저장하고 실제 쿠키 값을 입력하세요.
+#
+# 쿠키 획득 방법:
+#   1. Chrome 확장프로그램 "Get cookies.txt LOCALLY" 설치
+#   2. YouTube 로그인 후 확장프로그램 실행 → Export
+#   3. 내보낸 파일을 server/cookies.txt 로 저장
+#
+# ⚠️ 절대 실제 cookies.txt 를 GitHub 에 올리지 마세요 (개인 계정 탈취 위험)
+
+.youtube.com	TRUE	/	FALSE	0	PREF	f4=4000000&tz=UTC
+.youtube.com	TRUE	/	TRUE	0	__Secure-1PSID	your_session_token_here
+.youtube.com	TRUE	/	TRUE	0	__Secure-3PSID	your_session_token_here
+.youtube.com	TRUE	/	FALSE	0	SID	your_sid_here

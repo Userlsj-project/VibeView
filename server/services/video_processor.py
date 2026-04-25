@@ -42,7 +42,6 @@ class VideoProcessor:
             "no_warnings": True,
             "merge_output_format": "mp4",
             "js_runtimes": {"node": {}},
-            "remote_components": {"ejs:github"},
         }
 
         if _COOKIES_PATH.exists():

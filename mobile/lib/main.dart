@@ -38,6 +38,10 @@ const Map<String, String> kEmotionKo = {
   'neutral':   '중립',
   'fearful':   '두려움',
   'disgusted': '혐오',
+  'excited':   '흥분',
+  'anxious':   '불안',
+  'silence':   '무음',
+  'unknown':   '알 수 없음',
 };
 
 const Map<String, Color> kGradeColors = {
@@ -61,459 +65,290 @@ Paint _stroke(Color c, double w) => Paint()
   ..strokeCap = StrokeCap.round
   ..strokeJoin = StrokeJoin.round;
 
-// ── SD 치비 백호 수인 페인터 (사람 기반) ──────────────────
-class BeastmanPainter extends CustomPainter {
+// ── SD 로봇 페인터 ────────────────────────────────────────
+class RobotPainter extends CustomPainter {
   final CharacterMood mood;
   final double floatAnim;
-  final double spinAnim;
 
-  BeastmanPainter({
-    required this.mood,
-    required this.floatAnim,
-    required this.spinAnim,
-  });
+  RobotPainter({required this.mood, required this.floatAnim});
 
-  static const Color cSkin     = Color(0xFFFFE0C4);
-  static const Color cSkinDark = Color(0xFFFFCA9E);
-  static const Color cHair     = Color(0xFFF5F0E8);
-  static const Color cHairDim  = Color(0xFFE8E2D5);
-  static const Color cStripe   = Color(0xFF8B9DB5);
-  static const Color cOutline  = Color(0xFF3D3530);
-  static const Color cEyeL     = Color(0xFF5BB8FF);
-  static const Color cPupil    = Color(0xFF1A1A2E);
-  static const Color cBlush    = Color(0xFFFFB3C8);
-  static const Color cEarIn    = Color(0xFFFFCCDD);
-  static const Color cTeeth    = Color(0xFFFFFBF0);
-  static const Color cTongue   = Color(0xFFFF8FAB);
-  static const Color cNose     = Color(0xFFE8967A);
-  static const Color cLip      = Color(0xFFD4786A);
-  static const Color cCloth    = Color(0xFF4A90D9);
-  static const Color cCloth2   = Color(0xFF2E6DB4);
-  static const Color cAccent2  = kAccent2;
-  static const Color cAccent3  = kAccent3;
-  static const Color cYellow   = kYellow;
-  static const Color cTextDim  = kTextDim;
+  static const Color cBody     = Color(0xFF4A90D9);
+  static const Color cBodyDark = Color(0xFF2E6DB4);
+  static const Color cHead     = Color(0xFF5BA3E8);
+  static const Color cMetal    = Color(0xFFB0C4DE);
+  static const Color cMetalD   = Color(0xFF8FA8C8);
+  static const Color cOutline  = Color(0xFF2A3A5A);
+  static const Color cScreen   = Color(0xFF0A1628);
+  static const Color cGreen    = Color(0xFF00F5A0);
+  static const Color cYellow   = Color(0xFFFFD93D);
+  static const Color cRed      = Color(0xFFFF6B6B);
+  static const Color cPurple   = Color(0xFF9B8EFF);
+  static const Color cWhite    = Colors.white;
+  static const Color cAccentV  = kAccent;
 
   @override
   void paint(Canvas canvas, Size size) {
     final cx = size.width / 2;
-    final cy = size.height * 0.38;
-    final r  = size.width * 0.33;
-    _drawTigerEars(canvas, cx, cy, r);
-    _drawHairBack(canvas, cx, cy, r);
+    final cy = size.height * 0.36;
+    final r  = size.width * 0.30;
+
+    _drawAntenna(canvas, cx, cy, r);
     _drawBody(canvas, cx, cy, r);
-    _drawFace(canvas, cx, cy, r);
-    _drawHairFront(canvas, cx, cy, r);
-    _drawDecorations(canvas, cx, cy, r);
+    _drawHead(canvas, cx, cy, r);
+    _drawFaceScreen(canvas, cx, cy, r);
+    _drawArms(canvas, cx, cy, r);
+    _drawLegs(canvas, cx, cy, r);
   }
 
-  void _drawTigerEars(Canvas canvas, double cx, double cy, double r) {
+  void _drawAntenna(Canvas canvas, double cx, double cy, double r) {
+    // 안테나 막대
+    canvas.drawLine(
+      Offset(cx, cy - r * 1.02),
+      Offset(cx, cy - r * 1.45),
+      _stroke(cMetal, r * 0.07),
+    );
+    // 안테나 공
+    final ballColor = mood == CharacterMood.happy ? cGreen
+        : mood == CharacterMood.angry ? cRed
+        : mood == CharacterMood.sad ? cPurple
+        : mood == CharacterMood.surprised ? cYellow
+        : cGreen;
+    canvas.drawCircle(Offset(cx, cy - r * 1.5), r * 0.13, _fill(ballColor));
+    canvas.drawCircle(Offset(cx, cy - r * 1.5), r * 0.13, _stroke(cOutline, 1.5));
+    // 빛나는 효과
+    canvas.drawCircle(Offset(cx - r * 0.04, cy - r * 1.56), r * 0.04,
+      _fill(cWhite.withOpacity(0.7)));
+  }
+
+  void _drawHead(Canvas canvas, double cx, double cy, double r) {
+    // 머리 (둥근 사각형)
+    final headRect = RRect.fromRectAndRadius(
+      Rect.fromCenter(center: Offset(cx, cy), width: r * 2.0, height: r * 1.75),
+      Radius.circular(r * 0.32),
+    );
+    canvas.drawRRect(headRect, _fill(cHead));
+    canvas.drawRRect(headRect, _stroke(cOutline, 2.2));
+
+    // 귀 패널 (양쪽)
     for (final isLeft in [true, false]) {
-      final ex = isLeft ? cx - r * 0.68 : cx + r * 0.68;
-      final ey = cy - r * 0.82;
-      final earPath = Path()
-        ..moveTo(ex, ey - r * 0.42)
-        ..lineTo(ex - r * 0.28, ey + r * 0.18)
-        ..lineTo(ex + r * 0.28, ey + r * 0.18)
-        ..close();
-      canvas.drawPath(earPath, _fill(cHair));
-      canvas.drawPath(earPath, _fill(cStripe.withOpacity(0.15)));
-      canvas.drawPath(earPath, _stroke(cOutline, 1.8));
-      final innerPath = Path()
-        ..moveTo(ex, ey - r * 0.28)
-        ..lineTo(ex - r * 0.15, ey + r * 0.08)
-        ..lineTo(ex + r * 0.15, ey + r * 0.08)
-        ..close();
-      canvas.drawPath(innerPath, _fill(cEarIn));
-      canvas.drawLine(Offset(ex - r * 0.06, ey - r * 0.22),
-        Offset(ex - r * 0.04, ey + r * 0.06), _stroke(cStripe.withOpacity(0.35), 1.5));
-      canvas.drawLine(Offset(ex + r * 0.06, ey - r * 0.22),
-        Offset(ex + r * 0.04, ey + r * 0.06), _stroke(cStripe.withOpacity(0.35), 1.5));
-    }
-  }
-
-  void _drawHairBack(Canvas canvas, double cx, double cy, double r) {
-    final backHair = Path()
-      ..moveTo(cx - r * 0.95, cy - r * 0.3)
-      ..quadraticBezierTo(cx - r * 1.05, cy + r * 0.4, cx - r * 0.8, cy + r * 0.7)
-      ..lineTo(cx - r * 0.6, cy + r * 0.5)
-      ..quadraticBezierTo(cx - r * 0.85, cy + r * 0.2, cx - r * 0.78, cy - r * 0.25)
-      ..close();
-    canvas.drawPath(backHair, _fill(cHairDim));
-    final backHairR = Path()
-      ..moveTo(cx + r * 0.95, cy - r * 0.3)
-      ..quadraticBezierTo(cx + r * 1.05, cy + r * 0.4, cx + r * 0.8, cy + r * 0.7)
-      ..lineTo(cx + r * 0.6, cy + r * 0.5)
-      ..quadraticBezierTo(cx + r * 0.85, cy + r * 0.2, cx + r * 0.78, cy - r * 0.25)
-      ..close();
-    canvas.drawPath(backHairR, _fill(cHairDim));
-  }
-
-  void _drawBody(Canvas canvas, double cx, double cy, double r) {
-    final by = cy + r * 1.08;
-    final bodyPath = Path()
-      ..moveTo(cx - r * 0.58, cy + r * 0.78)
-      ..quadraticBezierTo(cx - r * 0.72, by + r * 0.1, cx - r * 0.55, by + r * 0.58)
-      ..lineTo(cx + r * 0.55, by + r * 0.58)
-      ..quadraticBezierTo(cx + r * 0.72, by + r * 0.1, cx + r * 0.58, cy + r * 0.78)
-      ..close();
-    canvas.drawPath(bodyPath, _fill(cCloth));
-    canvas.drawPath(bodyPath, _stroke(cOutline, 1.8));
-    final collarPath = Path()
-      ..moveTo(cx - r * 0.22, cy + r * 0.82)
-      ..lineTo(cx, cy + r * 1.05)
-      ..lineTo(cx + r * 0.22, cy + r * 0.82);
-    canvas.drawPath(collarPath, _fill(Colors.white));
-    canvas.drawPath(collarPath, _stroke(cOutline, 1.5));
-    for (int i = -1; i <= 1; i++) {
-      canvas.drawLine(
-        Offset(cx + i * r * 0.22, cy + r * 0.88),
-        Offset(cx + i * r * 0.2, by + r * 0.4),
-        _stroke(cCloth2.withOpacity(0.5), 2.0),
+      final ex = isLeft ? cx - r * 1.1 : cx + r * 1.1;
+      final earRect = RRect.fromRectAndRadius(
+        Rect.fromCenter(center: Offset(ex, cy + r * 0.1),
+          width: r * 0.22, height: r * 0.5),
+        Radius.circular(r * 0.08),
       );
+      canvas.drawRRect(earRect, _fill(cMetal));
+      canvas.drawRRect(earRect, _stroke(cOutline, 1.5));
+      // 귀 버튼
+      canvas.drawCircle(Offset(ex, cy + r * 0.1), r * 0.07,
+        _fill(isLeft ? cGreen : cYellow));
+      canvas.drawCircle(Offset(ex, cy + r * 0.1), r * 0.07,
+        _stroke(cOutline, 1.2));
     }
-    _drawArm(canvas, cx - r * 0.68, by - r * 0.08, r * 0.2, true);
-    _drawArm(canvas, cx + r * 0.68, by - r * 0.08, r * 0.2, false);
-    for (final dx in [-0.26, 0.26]) {
-      canvas.drawRRect(RRect.fromRectAndRadius(
-        Rect.fromCenter(center: Offset(cx + r * dx, by + r * 0.75), width: r * 0.38, height: r * 0.44),
-        const Radius.circular(14)), _fill(const Color(0xFF2E4A6B)));
-      canvas.drawRRect(RRect.fromRectAndRadius(
-        Rect.fromCenter(center: Offset(cx + r * dx, by + r * 0.75), width: r * 0.38, height: r * 0.44),
-        const Radius.circular(14)), _stroke(cOutline, 1.5));
-      canvas.drawOval(Rect.fromCenter(center: Offset(cx + r * dx + r * 0.04, by + r * 1.0),
-        width: r * 0.44, height: r * 0.22), _fill(const Color(0xFF1A2A3A)));
-      canvas.drawOval(Rect.fromCenter(center: Offset(cx + r * dx + r * 0.04, by + r * 1.0),
-        width: r * 0.44, height: r * 0.22), _stroke(cOutline, 1.4));
-    }
-    final tailPath = Path()
-      ..moveTo(cx + r * 0.5, by + r * 0.35)
-      ..cubicTo(cx + r * 1.05, by, cx + r * 1.25, by + r * 0.55, cx + r * 0.88, by + r * 0.78);
-    canvas.drawPath(tailPath, _stroke(cHair, r * 0.24));
-    canvas.drawPath(tailPath, _stroke(cOutline, r * 0.24 + 1.8));
-    canvas.drawPath(tailPath, _stroke(cHair, r * 0.18));
-    for (double t = 0.15; t < 0.85; t += 0.25) {
-      canvas.drawOval(Rect.fromCenter(
-        center: Offset(cx + r * (0.5 + t * 0.48), by + r * (0.35 - t * 0.12 + t * t * 0.55)),
-        width: r * 0.07, height: r * 0.18), _fill(cStripe.withOpacity(0.5)));
-    }
+
+    // 머리 상단 패널 라인
+    canvas.drawLine(
+      Offset(cx - r * 0.6, cy - r * 0.82),
+      Offset(cx + r * 0.6, cy - r * 0.82),
+      _stroke(cBodyDark.withOpacity(0.4), r * 0.06),
+    );
   }
 
-  void _drawArm(Canvas canvas, double ax, double ay, double ar, bool isLeft) {
-    canvas.save();
-    canvas.translate(ax, ay);
-    canvas.rotate(isLeft ? 0.3 : -0.3);
-    canvas.drawOval(Rect.fromCenter(center: Offset.zero, width: ar * 1.2, height: ar * 2.2), _fill(cCloth));
-    canvas.drawOval(Rect.fromCenter(center: Offset.zero, width: ar * 1.2, height: ar * 2.2), _stroke(cOutline, 1.5));
-    canvas.drawCircle(Offset(0, ar * 1.0), ar * 0.55, _fill(cSkin));
-    canvas.drawCircle(Offset(0, ar * 1.0), ar * 0.55, _stroke(cOutline, 1.3));
-    canvas.restore();
+  void _drawFaceScreen(Canvas canvas, double cx, double cy, double r) {
+    // 화면 베젤
+    final bezelRect = RRect.fromRectAndRadius(
+      Rect.fromCenter(center: Offset(cx, cy + r * 0.05),
+        width: r * 1.55, height: r * 1.22),
+      Radius.circular(r * 0.18),
+    );
+    canvas.drawRRect(bezelRect, _fill(cOutline));
+
+    // 화면
+    final screenRect = RRect.fromRectAndRadius(
+      Rect.fromCenter(center: Offset(cx, cy + r * 0.05),
+        width: r * 1.38, height: r * 1.06),
+      Radius.circular(r * 0.13),
+    );
+    canvas.drawRRect(screenRect, _fill(cScreen));
+
+    // 감정별 얼굴 표현
+    _drawEmotionFace(canvas, cx, cy + r * 0.05, r);
   }
 
-  void _drawFace(Canvas canvas, double cx, double cy, double r) {
-    canvas.drawOval(Rect.fromCenter(center: Offset(cx + r * 0.02, cy + r * 0.04),
-      width: r * 2.08, height: r * 2.08), _fill(cOutline.withOpacity(0.05)));
-    canvas.drawOval(Rect.fromCenter(center: Offset(cx, cy), width: r * 2.0, height: r * 2.05), _fill(cSkin));
-    canvas.drawOval(Rect.fromCenter(center: Offset(cx - r * 0.58, cy + r * 0.2),
-      width: r * 0.5, height: r * 0.28), _fill(cBlush.withOpacity(0.6)));
-    canvas.drawOval(Rect.fromCenter(center: Offset(cx + r * 0.58, cy + r * 0.2),
-      width: r * 0.5, height: r * 0.28), _fill(cBlush.withOpacity(0.6)));
-    _drawEyes(canvas, cx, cy, r);
-    _drawNose(canvas, cx, cy, r);
-    _drawMouth(canvas, cx, cy, r);
-    canvas.drawOval(Rect.fromCenter(center: Offset(cx, cy), width: r * 2.0, height: r * 2.05),
-      _stroke(cOutline, 2.0));
-    _drawForheadStripes(canvas, cx, cy, r);
-  }
-
-  void _drawHairFront(Canvas canvas, double cx, double cy, double r) {
-    final bangPath = Path()
-      ..moveTo(cx - r * 0.95, cy - r * 0.55)
-      ..quadraticBezierTo(cx - r * 0.7, cy - r * 1.15, cx, cy - r * 1.12)
-      ..quadraticBezierTo(cx + r * 0.7, cy - r * 1.15, cx + r * 0.95, cy - r * 0.55)
-      ..quadraticBezierTo(cx + r * 0.6, cy - r * 0.72, cx + r * 0.35, cy - r * 0.65)
-      ..quadraticBezierTo(cx + r * 0.1, cy - r * 0.58, cx, cy - r * 0.62)
-      ..quadraticBezierTo(cx - r * 0.25, cy - r * 0.58, cx - r * 0.42, cy - r * 0.68)
-      ..quadraticBezierTo(cx - r * 0.6, cy - r * 0.72, cx - r * 0.95, cy - r * 0.55)
-      ..close();
-    canvas.drawPath(bangPath, _fill(cHair));
-    canvas.drawPath(bangPath, _stroke(cOutline, 1.8));
-    _drawHairStrands(canvas, cx, cy, r);
-    _drawHairStripes(canvas, cx, cy, r);
-  }
-
-  void _drawHairStrands(Canvas canvas, double cx, double cy, double r) {
-    final strands = [
-      [cx - r * 0.35, cy - r * 0.58, cx - r * 0.28, cy - r * 0.38],
-      [cx - r * 0.08, cy - r * 0.62, cx - r * 0.04, cy - r * 0.4],
-      [cx + r * 0.18, cy - r * 0.6, cx + r * 0.22, cy - r * 0.42],
-    ];
-    for (final s in strands) {
-      final strandPath = Path()
-        ..moveTo(s[0] - r * 0.06, s[1])
-        ..quadraticBezierTo(s[0], s[3] - r * 0.05, s[2], s[3])
-        ..quadraticBezierTo(s[0] + r * 0.02, s[3] - r * 0.05, s[0] + r * 0.06, s[1])
-        ..close();
-      canvas.drawPath(strandPath, _fill(cHair));
-      canvas.drawPath(strandPath, _stroke(cOutline, 1.2));
-    }
-  }
-
-  void _drawHairStripes(Canvas canvas, double cx, double cy, double r) {
-    final sw = _stroke(cStripe.withOpacity(0.2), r * 0.055);
-    canvas.drawPath(Path()
-      ..moveTo(cx - r * 0.25, cy - r * 1.08)
-      ..quadraticBezierTo(cx - r * 0.18, cy - r * 0.82, cx - r * 0.14, cy - r * 0.62), sw);
-    canvas.drawPath(Path()
-      ..moveTo(cx + r * 0.12, cy - r * 1.1)
-      ..quadraticBezierTo(cx + r * 0.08, cy - r * 0.85, cx + r * 0.06, cy - r * 0.65), sw);
-    canvas.drawPath(Path()
-      ..moveTo(cx + r * 0.45, cy - r * 1.0)
-      ..quadraticBezierTo(cx + r * 0.38, cy - r * 0.8, cx + r * 0.32, cy - r * 0.62),
-      _stroke(cStripe.withOpacity(0.15), r * 0.045));
-  }
-
-  void _drawForheadStripes(Canvas canvas, double cx, double cy, double r) {
-    final sw = _stroke(cStripe.withOpacity(0.32), r * 0.07);
-    canvas.drawPath(Path()
-      ..moveTo(cx, cy - r * 0.6)
-      ..quadraticBezierTo(cx + r * 0.02, cy - r * 0.45, cx, cy - r * 0.32), sw);
-    canvas.drawPath(Path()
-      ..moveTo(cx - r * 0.22, cy - r * 0.55)
-      ..quadraticBezierTo(cx - r * 0.18, cy - r * 0.42, cx - r * 0.15, cy - r * 0.3),
-      _stroke(cStripe.withOpacity(0.22), r * 0.055));
-    canvas.drawPath(Path()
-      ..moveTo(cx + r * 0.22, cy - r * 0.55)
-      ..quadraticBezierTo(cx + r * 0.18, cy - r * 0.42, cx + r * 0.15, cy - r * 0.3),
-      _stroke(cStripe.withOpacity(0.22), r * 0.055));
-  }
-
-  void _drawEyes(Canvas canvas, double cx, double cy, double r) {
-    final lx = cx - r * 0.34;
-    final rx = cx + r * 0.34;
-    final ey = cy - r * 0.06;
-    final ew = r * 0.32;
-    final eh = r * 0.22;
+  void _drawEmotionFace(Canvas canvas, double cx, double cy, double r) {
+    final eyeY   = cy - r * 0.18;
+    final mouthY = cy + r * 0.28;
+    final eyeGap = r * 0.38;
 
     switch (mood) {
       case CharacterMood.happy:
-        for (final ex in [lx, rx]) {
-          final p = Path()
-            ..moveTo(ex - ew * 0.9, ey + eh * 0.2)
-            ..quadraticBezierTo(ex, ey - eh * 1.1, ex + ew * 0.9, ey + eh * 0.2);
-          canvas.drawPath(p, _stroke(cOutline, 2.5));
+        // 눈: 초록 반짝이는 원
+        for (final dx in [-eyeGap, eyeGap]) {
+          canvas.drawCircle(Offset(cx + dx, eyeY), r * 0.14, _fill(cGreen));
+          canvas.drawCircle(Offset(cx + dx + r * 0.05, eyeY - r * 0.06),
+            r * 0.04, _fill(cWhite.withOpacity(0.8)));
         }
-        _drawEyebrows(canvas, lx, rx, ey, ew, r, mood);
-        return;
+        // 입: 활짝 웃는 호
+        canvas.drawPath(
+          Path()
+            ..moveTo(cx - r * 0.38, mouthY - r * 0.04)
+            ..quadraticBezierTo(cx, mouthY + r * 0.28, cx + r * 0.38, mouthY - r * 0.04),
+          _stroke(cGreen, r * 0.09),
+        );
+        // 볼 반짝이
+        for (final dx in [-r * 0.52, r * 0.52]) {
+          canvas.drawCircle(Offset(cx + dx, cy + r * 0.08), r * 0.09,
+            _fill(cGreen.withOpacity(0.25)));
+        }
+        break;
+
       case CharacterMood.sad:
-        _drawDefaultEyeShape(canvas, lx, rx, ey, ew, eh, 0.0);
-        _drawTear(canvas, lx + ew * 0.4, ey + eh * 1.3, r * 0.1);
-        _drawTear(canvas, rx + ew * 0.4, ey + eh * 1.3, r * 0.1);
-        _drawEyebrows(canvas, lx, rx, ey, ew, r, mood);
-        return;
-      case CharacterMood.surprised:
-        for (final ex in [lx, rx]) {
-          canvas.drawOval(Rect.fromCenter(center: Offset(ex, ey),
-            width: ew * 1.6, height: eh * 2.4), _fill(Colors.white));
-          canvas.drawOval(Rect.fromCenter(center: Offset(ex, ey),
-            width: ew * 0.9, height: eh * 1.5), _fill(cEyeL));
-          canvas.drawOval(Rect.fromCenter(center: Offset(ex, ey + eh * 0.1),
-            width: ew * 0.45, height: eh * 0.85), _fill(cPupil));
-          canvas.drawCircle(Offset(ex + ew * 0.2, ey - eh * 0.3), r * 0.055, _fill(Colors.white));
-          canvas.drawOval(Rect.fromCenter(center: Offset(ex, ey),
-            width: ew * 1.6, height: eh * 2.4), _stroke(cOutline, 1.8));
+        // 눈: 파란 반달
+        for (final dx in [-eyeGap, eyeGap]) {
+          canvas.drawPath(
+            Path()
+              ..moveTo(cx + dx - r * 0.14, eyeY - r * 0.04)
+              ..quadraticBezierTo(cx + dx, eyeY + r * 0.14, cx + dx + r * 0.14, eyeY - r * 0.04),
+            _stroke(cPurple, r * 0.09),
+          );
         }
-        _drawEyebrows(canvas, lx, rx, ey, ew, r, mood);
-        return;
-      default:
-        _drawDefaultEyeShape(canvas, lx, rx, ey, ew, eh, 0.0);
-        _drawEyebrows(canvas, lx, rx, ey, ew, r, mood);
-    }
-  }
-
-  void _drawDefaultEyeShape(Canvas canvas, double lx, double rx,
-      double ey, double ew, double eh, double offsetY) {
-    for (final ex in [lx, rx]) {
-      final eyePath = Path()
-        ..moveTo(ex - ew, ey + offsetY)
-        ..quadraticBezierTo(ex, ey - eh + offsetY, ex + ew, ey + offsetY)
-        ..quadraticBezierTo(ex, ey + eh + offsetY, ex - ew, ey + offsetY)
-        ..close();
-      canvas.drawPath(eyePath, _fill(Colors.white));
-      canvas.drawOval(Rect.fromCenter(center: Offset(ex, ey + offsetY + eh * 0.05),
-        width: ew * 1.0, height: eh * 1.5), _fill(cEyeL));
-      canvas.drawOval(Rect.fromCenter(center: Offset(ex + ew * 0.08, ey + offsetY + eh * 0.1),
-        width: ew * 0.5, height: eh * 0.85), _fill(cPupil));
-      canvas.drawCircle(Offset(ex + ew * 0.28, ey - eh * 0.15 + offsetY), r * 0.055, _fill(Colors.white));
-      canvas.drawCircle(Offset(ex - ew * 0.1, ey + eh * 0.25 + offsetY), r * 0.028,
-        _fill(Colors.white.withOpacity(0.7)));
-      canvas.drawPath(
-        Path()
-          ..moveTo(ex - ew, ey + offsetY)
-          ..quadraticBezierTo(ex, ey - eh + offsetY, ex + ew, ey + offsetY)
-          ..quadraticBezierTo(ex, ey + eh + offsetY, ex - ew, ey + offsetY)
-          ..close(),
-        _stroke(cOutline, 1.8));
-      for (int i = -2; i <= 2; i++) {
-        final lashX = ex + i * ew * 0.38;
-        final lashY = ey - eh * 0.85 + offsetY;
-        canvas.drawLine(Offset(lashX, lashY), Offset(lashX + i * r * 0.015, lashY - r * 0.045),
-          _stroke(cOutline, 1.4));
-      }
-    }
-  }
-
-  // r 필드는 CustomPainter 안에서 직접 사용할 수 없으므로 paint()의 r을 인자로 전달
-  double get r => 0.0; // 사용 안 함 - _drawDefaultEyeShape는 r을 0으로 사용하므로 별도 처리
-
-  void _drawEyebrows(Canvas canvas, double lx, double rx,
-      double ey, double ew, double r, CharacterMood mood) {
-    final by = ey - r * 0.28;
-    switch (mood) {
-      case CharacterMood.happy:
-        for (final ex in [lx, rx]) {
-          canvas.drawPath(Path()
-            ..moveTo(ex - ew * 0.85, by + r * 0.04)
-            ..quadraticBezierTo(ex, by - r * 0.06, ex + ew * 0.85, by + r * 0.04),
-            _stroke(cOutline, 2.2));
+        // 눈물
+        for (final dx in [-eyeGap + r * 0.06, eyeGap + r * 0.06]) {
+          canvas.drawPath(
+            Path()
+              ..moveTo(cx + dx, eyeY + r * 0.12)
+              ..quadraticBezierTo(cx + dx + r * 0.04, eyeY + r * 0.24, cx + dx, eyeY + r * 0.3),
+            _stroke(const Color(0xFF93C5FD).withOpacity(0.8), r * 0.06),
+          );
         }
+        // 입: 내려간 호
+        canvas.drawPath(
+          Path()
+            ..moveTo(cx - r * 0.32, mouthY + r * 0.08)
+            ..quadraticBezierTo(cx, mouthY - r * 0.16, cx + r * 0.32, mouthY + r * 0.08),
+          _stroke(cPurple, r * 0.08),
+        );
         break;
-      case CharacterMood.sad:
-        canvas.drawLine(Offset(lx - ew, by - r * 0.04), Offset(lx + ew, by + r * 0.04), _stroke(cOutline, 2.2));
-        canvas.drawLine(Offset(rx - ew, by + r * 0.04), Offset(rx + ew, by - r * 0.04), _stroke(cOutline, 2.2));
-        break;
-      case CharacterMood.surprised:
-        for (final ex in [lx, rx]) {
-          canvas.drawPath(Path()
-            ..moveTo(ex - ew * 0.85, by - r * 0.06)
-            ..quadraticBezierTo(ex, by - r * 0.16, ex + ew * 0.85, by - r * 0.06),
-            _stroke(cOutline, 2.5));
-        }
-        break;
-      case CharacterMood.thinking:
-        canvas.drawLine(Offset(lx - ew * 0.8, by), Offset(lx + ew * 0.8, by), _stroke(cOutline, 2.0));
-        canvas.drawPath(Path()
-          ..moveTo(rx - ew * 0.8, by + r * 0.02)
-          ..quadraticBezierTo(rx, by - r * 0.1, rx + ew * 0.8, by + r * 0.02),
-          _stroke(cOutline, 2.0));
-        break;
+
       case CharacterMood.angry:
-        canvas.drawLine(Offset(lx - ew, by - r * 0.02), Offset(lx + ew, by + r * 0.08), _stroke(cAccent2, 2.8));
-        canvas.drawLine(Offset(rx - ew, by + r * 0.08), Offset(rx + ew, by - r * 0.02), _stroke(cAccent2, 2.8));
-        break;
-      default:
-        for (final ex in [lx, rx]) {
-          canvas.drawPath(Path()
-            ..moveTo(ex - ew * 0.85, by + r * 0.02)
-            ..quadraticBezierTo(ex, by - r * 0.04, ex + ew * 0.85, by + r * 0.02),
-            _stroke(cOutline.withOpacity(0.7), 2.0));
+        // 눈: 빨간 찡그림
+        for (final isLeft in [true, false]) {
+          final dx = isLeft ? -eyeGap : eyeGap;
+          canvas.drawCircle(Offset(cx + dx, eyeY), r * 0.13, _fill(cRed));
+          // 화난 눈썹
+          canvas.drawLine(
+            Offset(cx + dx + (isLeft ? r * 0.14 : -r * 0.14), eyeY - r * 0.2),
+            Offset(cx + dx + (isLeft ? -r * 0.14 : r * 0.14), eyeY - r * 0.07),
+            _stroke(cRed, r * 0.08),
+          );
         }
-    }
-  }
-
-  void _drawTear(Canvas canvas, double tx, double ty, double tr) {
-    canvas.drawPath(Path()
-      ..moveTo(tx, ty - tr * 0.4)
-      ..quadraticBezierTo(tx + tr * 0.5, ty + tr * 0.1, tx, ty + tr * 0.7)
-      ..quadraticBezierTo(tx - tr * 0.5, ty + tr * 0.1, tx, ty - tr * 0.4),
-      _fill(const Color(0xFF93C5FD).withOpacity(0.85)));
-  }
-
-  void _drawNose(Canvas canvas, double cx, double cy, double r) {
-    canvas.drawOval(Rect.fromCenter(center: Offset(cx, cy + r * 0.18),
-      width: r * 0.22, height: r * 0.14), _fill(cSkinDark));
-    canvas.drawCircle(Offset(cx - r * 0.07, cy + r * 0.19), r * 0.04, _fill(cNose.withOpacity(0.6)));
-    canvas.drawCircle(Offset(cx + r * 0.07, cy + r * 0.19), r * 0.04, _fill(cNose.withOpacity(0.6)));
-  }
-
-  void _drawMouth(Canvas canvas, double cx, double cy, double r) {
-    final my = cy + r * 0.4;
-    switch (mood) {
-      case CharacterMood.happy:
-        canvas.drawPath(Path()
-          ..moveTo(cx - r * 0.35, my - r * 0.04)
-          ..quadraticBezierTo(cx, my + r * 0.32, cx + r * 0.35, my - r * 0.04),
-          _stroke(cOutline, 2.5));
-        canvas.drawRRect(RRect.fromRectAndRadius(
-          Rect.fromCenter(center: Offset(cx, my + r * 0.1), width: r * 0.42, height: r * 0.16),
-          const Radius.circular(5)), _fill(cTeeth));
-        canvas.drawLine(Offset(cx, my + r * 0.02), Offset(cx, my + r * 0.18),
-          _stroke(const Color(0xFFDDD8C8), 1.4));
-        canvas.drawPath(Path()
-          ..moveTo(cx - r * 0.15, my + r * 0.18)
-          ..quadraticBezierTo(cx, my + r * 0.38, cx + r * 0.15, my + r * 0.18),
-          _fill(cTongue));
+        // 입: 꽉 다문 직선
+        canvas.drawLine(
+          Offset(cx - r * 0.3, mouthY),
+          Offset(cx + r * 0.3, mouthY),
+          _stroke(cRed, r * 0.09),
+        );
+        // 분노 스파크
+        for (final pos in [
+          Offset(cx - r * 0.72, cy - r * 0.45),
+          Offset(cx + r * 0.72, cy - r * 0.45),
+        ]) {
+          _drawSmallStar(canvas, pos, r * 0.08, _fill(cRed.withOpacity(0.8)));
+        }
         break;
-      case CharacterMood.sad:
-        canvas.drawPath(Path()
-          ..moveTo(cx - r * 0.28, my + r * 0.1)
-          ..quadraticBezierTo(cx, my - r * 0.15, cx + r * 0.28, my + r * 0.1),
-          _stroke(const Color(0xFF5B9BD5), 2.4));
-        break;
+
       case CharacterMood.surprised:
-        canvas.drawOval(Rect.fromCenter(center: Offset(cx, my + r * 0.05),
-          width: r * 0.26, height: r * 0.34), _fill(const Color(0xFF3D3530)));
+        // 눈: 크게 뜬 노란 원
+        for (final dx in [-eyeGap, eyeGap]) {
+          canvas.drawCircle(Offset(cx + dx, eyeY), r * 0.17, _fill(cYellow));
+          canvas.drawCircle(Offset(cx + dx, eyeY), r * 0.09, _fill(cOutline));
+          canvas.drawCircle(Offset(cx + dx + r * 0.06, eyeY - r * 0.07),
+            r * 0.04, _fill(cWhite.withOpacity(0.7)));
+        }
+        // 입: 동그란 O
+        canvas.drawCircle(Offset(cx, mouthY), r * 0.13, _fill(cOutline));
+        canvas.drawCircle(Offset(cx, mouthY), r * 0.08, _fill(cYellow.withOpacity(0.4)));
+        // 놀람 선
+        for (final pos in [
+          Offset(cx - r * 0.68, cy - r * 0.5),
+          Offset(cx + r * 0.68, cy - r * 0.5),
+          Offset(cx, cy - r * 0.6),
+        ]) {
+          _drawSmallStar(canvas, pos, r * 0.07, _fill(cYellow.withOpacity(0.85)));
+        }
         break;
+
       case CharacterMood.thinking:
-        canvas.drawPath(Path()
-          ..moveTo(cx - r * 0.1, my + r * 0.02)
-          ..quadraticBezierTo(cx + r * 0.06, my - r * 0.1, cx + r * 0.24, my + r * 0.05),
-          _stroke(cTextDim, 2.2));
+        // 눈: 점선 깜빡이는 느낌
+        for (final dx in [-eyeGap, eyeGap]) {
+          canvas.drawLine(
+            Offset(cx + dx - r * 0.12, eyeY),
+            Offset(cx + dx + r * 0.12, eyeY),
+            _stroke(cMetalD, r * 0.09),
+          );
+        }
+        // 입: 삐딱
+        canvas.drawPath(
+          Path()
+            ..moveTo(cx - r * 0.12, mouthY + r * 0.04)
+            ..quadraticBezierTo(cx + r * 0.08, mouthY - r * 0.1, cx + r * 0.28, mouthY + r * 0.04),
+          _stroke(cMetalD, r * 0.07),
+        );
+        // 생각 말풍선
+        _drawThinkDots(canvas, cx + r * 0.72, cy - r * 0.35, r);
         break;
-      case CharacterMood.angry:
-        canvas.drawPath(Path()
-          ..moveTo(cx - r * 0.28, my + r * 0.06)
-          ..quadraticBezierTo(cx, my - r * 0.1, cx + r * 0.28, my + r * 0.06),
-          _stroke(cAccent2, 2.6));
-        canvas.drawLine(Offset(cx - r * 0.18, my + r * 0.03), Offset(cx + r * 0.18, my + r * 0.03),
-          _stroke(cOutline.withOpacity(0.3), 1.4));
-        break;
-      default:
-        canvas.drawPath(Path()
-          ..moveTo(cx - r * 0.24, my)
-          ..quadraticBezierTo(cx, my + r * 0.2, cx + r * 0.24, my),
-          _stroke(cLip, 2.3));
+
+      default: // idle / neutral
+        // 눈: 평온한 초록 사각 LED
+        for (final dx in [-eyeGap, eyeGap]) {
+          canvas.drawRRect(
+            RRect.fromRectAndRadius(
+              Rect.fromCenter(center: Offset(cx + dx, eyeY), width: r * 0.28, height: r * 0.18),
+              Radius.circular(r * 0.05),
+            ),
+            _fill(cGreen),
+          );
+        }
+        // 입: 수평 바
+        canvas.drawRRect(
+          RRect.fromRectAndRadius(
+            Rect.fromCenter(center: Offset(cx, mouthY), width: r * 0.55, height: r * 0.1),
+            Radius.circular(r * 0.04),
+          ),
+          _fill(cGreen.withOpacity(0.7)),
+        );
     }
   }
 
-  void _drawDecorations(Canvas canvas, double cx, double cy, double r) {
-    if (mood == CharacterMood.thinking) {
-      _drawThinkBubble(canvas, cx + r * 0.88, cy - r * 0.82, r * 0.38);
-    }
-    if (mood == CharacterMood.happy || mood == CharacterMood.surprised) {
-      _drawSparkles(canvas, cx, cy, r);
-    }
-  }
-
-  void _drawThinkBubble(Canvas canvas, double bx, double by, double br) {
-    canvas.drawCircle(Offset(bx - br * 0.65, by + br * 0.8), br * 0.13, _fill(cAccent3.withOpacity(0.8)));
-    canvas.drawCircle(Offset(bx - br * 0.4, by + br * 0.52), br * 0.18, _fill(cAccent3.withOpacity(0.85)));
-    canvas.drawRRect(RRect.fromRectAndRadius(
-      Rect.fromCenter(center: Offset(bx, by), width: br * 2.1, height: br * 1.15),
-      const Radius.circular(18)), _fill(cAccent3.withOpacity(0.88)));
-    canvas.drawRRect(RRect.fromRectAndRadius(
-      Rect.fromCenter(center: Offset(bx, by), width: br * 2.1, height: br * 1.15),
-      const Radius.circular(18)), _stroke(Colors.white.withOpacity(0.35), 1.5));
+  void _drawThinkDots(Canvas canvas, double bx, double by, double r) {
+    canvas.drawCircle(Offset(bx - r * 0.25, by + r * 0.35), r * 0.07,
+      _fill(cPurple.withOpacity(0.7)));
+    canvas.drawCircle(Offset(bx, by + r * 0.22), r * 0.1,
+      _fill(cPurple.withOpacity(0.8)));
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(
+        Rect.fromCenter(center: Offset(bx + r * 0.1, by), width: r * 0.7, height: r * 0.42),
+        Radius.circular(r * 0.12),
+      ),
+      _fill(cPurple.withOpacity(0.85)),
+    );
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(
+        Rect.fromCenter(center: Offset(bx + r * 0.1, by), width: r * 0.7, height: r * 0.42),
+        Radius.circular(r * 0.12),
+      ),
+      _stroke(cWhite.withOpacity(0.3), 1.2),
+    );
+    const text = '···';
     final tp = TextPainter(
-      text: const TextSpan(text: '.....', style: TextStyle(
-        color: Colors.white, fontSize: 16, fontWeight: FontWeight.w800, letterSpacing: 1.5)),
+      text: const TextSpan(text: text, style: TextStyle(
+        color: Colors.white, fontSize: 13, fontWeight: FontWeight.w800)),
       textDirection: TextDirection.ltr,
     )..layout();
-    tp.paint(canvas, Offset(bx - tp.width / 2, by - tp.height / 2));
+    tp.paint(canvas, Offset(bx + r * 0.1 - tp.width / 2, by - tp.height / 2));
   }
 
-  void _drawSparkles(Canvas canvas, double cx, double cy, double r) {
-    final p = _fill(cYellow.withOpacity(0.88));
-    for (final pos in [
-      Offset(cx - r * 1.05, cy - r * 0.5),
-      Offset(cx + r * 1.08, cy - r * 0.58),
-      Offset(cx - r * 0.82, cy - r * 0.92),
-    ]) {
-      _drawStar(canvas, pos, r * 0.09, p);
-    }
-  }
-
-  void _drawStar(Canvas canvas, Offset center, double size, Paint paint) {
+  void _drawSmallStar(Canvas canvas, Offset center, double size, Paint paint) {
     final path = Path();
     for (int i = 0; i < 8; i++) {
       final angle  = i * pi / 4;
@@ -526,78 +361,143 @@ class BeastmanPainter extends CustomPainter {
     canvas.drawPath(path, paint);
   }
 
+  void _drawBody(Canvas canvas, double cx, double cy, double r) {
+    final by = cy + r * 1.08;
+    // 몸통
+    final bodyRect = RRect.fromRectAndRadius(
+      Rect.fromCenter(center: Offset(cx, by + r * 0.18),
+        width: r * 1.68, height: r * 1.0),
+      Radius.circular(r * 0.22),
+    );
+    canvas.drawRRect(bodyRect, _fill(cBody));
+    canvas.drawRRect(bodyRect, _stroke(cOutline, 2.0));
+
+    // 가슴 패널
+    final panelRect = RRect.fromRectAndRadius(
+      Rect.fromCenter(center: Offset(cx, by + r * 0.12),
+        width: r * 1.1, height: r * 0.6),
+      Radius.circular(r * 0.12),
+    );
+    canvas.drawRRect(panelRect, _fill(cBodyDark.withOpacity(0.5)));
+
+    // 가슴 버튼들
+    final btnColors = [cGreen, cYellow, cRed];
+    for (int i = 0; i < 3; i++) {
+      canvas.drawCircle(
+        Offset(cx - r * 0.22 + i * r * 0.22, by + r * 0.08),
+        r * 0.07, _fill(btnColors[i]),
+      );
+    }
+
+    // 배터리 바
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(
+        Rect.fromCenter(center: Offset(cx, by + r * 0.32), width: r * 0.72, height: r * 0.14),
+        Radius.circular(r * 0.04),
+      ),
+      _stroke(cMetalD, 1.5),
+    );
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(
+        Rect.fromCenter(center: Offset(cx - r * 0.12, by + r * 0.32), width: r * 0.46, height: r * 0.1),
+        Radius.circular(r * 0.03),
+      ),
+      _fill(cGreen),
+    );
+  }
+
+  void _drawArms(Canvas canvas, double cx, double cy, double r) {
+    final by = cy + r * 1.08;
+    for (final isLeft in [true, false]) {
+      final ax = isLeft ? cx - r * 1.05 : cx + r * 1.05;
+      // 팔
+      final armRect = RRect.fromRectAndRadius(
+        Rect.fromCenter(center: Offset(ax, by + r * 0.22),
+          width: r * 0.3, height: r * 0.82),
+        Radius.circular(r * 0.12),
+      );
+      canvas.drawRRect(armRect, _fill(cMetal));
+      canvas.drawRRect(armRect, _stroke(cOutline, 1.5));
+      // 손
+      canvas.drawCircle(Offset(ax, by + r * 0.72), r * 0.18, _fill(cMetalD));
+      canvas.drawCircle(Offset(ax, by + r * 0.72), r * 0.18, _stroke(cOutline, 1.4));
+    }
+  }
+
+  void _drawLegs(Canvas canvas, double cx, double cy, double r) {
+    final by = cy + r * 1.62;
+    for (final isLeft in [true, false]) {
+      final lx = isLeft ? cx - r * 0.3 : cx + r * 0.3;
+      // 다리
+      final legRect = RRect.fromRectAndRadius(
+        Rect.fromCenter(center: Offset(lx, by + r * 0.3),
+          width: r * 0.34, height: r * 0.7),
+        Radius.circular(r * 0.1),
+      );
+      canvas.drawRRect(legRect, _fill(cBodyDark));
+      canvas.drawRRect(legRect, _stroke(cOutline, 1.5));
+      // 발
+      final footRect = RRect.fromRectAndRadius(
+        Rect.fromCenter(center: Offset(lx + (isLeft ? -r * 0.06 : r * 0.06), by + r * 0.72),
+          width: r * 0.48, height: r * 0.22),
+        Radius.circular(r * 0.08),
+      );
+      canvas.drawRRect(footRect, _fill(cMetal));
+      canvas.drawRRect(footRect, _stroke(cOutline, 1.4));
+    }
+  }
+
   @override
-  bool shouldRepaint(BeastmanPainter old) =>
-      old.mood != mood || old.floatAnim != floatAnim || old.spinAnim != spinAnim;
+  bool shouldRepaint(RobotPainter old) =>
+      old.mood != mood || old.floatAnim != floatAnim;
 }
 
 // ── 캐릭터 위젯 ───────────────────────────────────────────
-class BeastmanCharacter extends StatefulWidget {
+class RobotCharacter extends StatefulWidget {
   final CharacterMood mood;
   final double size;
-  const BeastmanCharacter({super.key, required this.mood, this.size = 150});
+  const RobotCharacter({super.key, required this.mood, this.size = 150});
 
   @override
-  State<BeastmanCharacter> createState() => _BeastmanCharacterState();
+  State<RobotCharacter> createState() => _RobotCharacterState();
 }
 
-class _BeastmanCharacterState extends State<BeastmanCharacter>
-    with TickerProviderStateMixin {
+class _RobotCharacterState extends State<RobotCharacter>
+    with SingleTickerProviderStateMixin {
   late AnimationController _floatCtrl;
-  late AnimationController _spinCtrl;
   late Animation<double> _floatAnim;
-  late Animation<double> _spinAnim;
 
   @override
   void initState() {
     super.initState();
-    _floatCtrl = AnimationController(vsync: this, duration: const Duration(milliseconds: 2000))
-      ..repeat(reverse: true);
-    _spinCtrl  = AnimationController(vsync: this, duration: const Duration(milliseconds: 1100));
+    _floatCtrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 2000),
+    )..repeat(reverse: true);
     _floatAnim = CurvedAnimation(parent: _floatCtrl, curve: Curves.easeInOut);
-    _spinAnim  = Tween<double>(begin: 0, end: 2 * pi).animate(
-      CurvedAnimation(parent: _spinCtrl, curve: Curves.linear));
-    if (widget.mood == CharacterMood.thinking) _spinCtrl.repeat();
-  }
-
-  @override
-  void didUpdateWidget(BeastmanCharacter old) {
-    super.didUpdateWidget(old);
-    if (widget.mood == CharacterMood.thinking) {
-      if (!_spinCtrl.isAnimating) _spinCtrl.repeat();
-    } else {
-      _spinCtrl.stop();
-      _spinCtrl.reset();
-    }
   }
 
   @override
   void dispose() {
     _floatCtrl.dispose();
-    _spinCtrl.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return AnimatedBuilder(
-      animation: Listenable.merge([_floatAnim, _spinAnim]),
+      animation: _floatAnim,
       builder: (context, _) {
         final floatOffset = sin(_floatAnim.value * pi) * 8.0;
-        final spin = widget.mood == CharacterMood.thinking ? _spinAnim.value : 0.0;
         return Transform.translate(
           offset: Offset(0, -floatOffset),
-          child: Transform.rotate(
-            angle: spin,
-            child: SizedBox(
-              width: widget.size,
-              height: widget.size * 1.5,
-              child: CustomPaint(
-                painter: BeastmanPainter(
-                  mood: widget.mood,
-                  floatAnim: _floatAnim.value,
-                  spinAnim: spin,
-                ),
+          child: SizedBox(
+            width: widget.size,
+            height: widget.size * 1.5,
+            child: CustomPaint(
+              painter: RobotPainter(
+                mood: widget.mood,
+                floatAnim: _floatAnim.value,
               ),
             ),
           ),
@@ -711,7 +611,7 @@ class _HomePageState extends State<HomePage> {
                 ),
               ]),
               const SizedBox(height: 20),
-              Center(child: BeastmanCharacter(
+              Center(child: RobotCharacter(
                 mood: _loading ? CharacterMood.thinking : CharacterMood.idle, size: 130)),
               const SizedBox(height: 6),
               Center(child: AnimatedSwitcher(
@@ -1054,7 +954,7 @@ class _ResultPageState extends State<ResultPage> {
 
             // ── 캐릭터 + 감정 배지 ──────────────────────────
             _card(child: Column(children: [
-              Center(child: BeastmanCharacter(mood: mood, size: 110)),
+              Center(child: RobotCharacter(mood: mood, size: 110)),
               const SizedBox(height: 8),
               Center(child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -1200,20 +1100,7 @@ class _ResultPageState extends State<ResultPage> {
                 const SizedBox(width: 8),
                 _statCell('LANGUAGE', (audioSummary['language'] as String?)?.toUpperCase() ?? '-'),
               ]),
-              if ((audioSummary['full_text'] as String?)?.isNotEmpty == true) ...[
-                const SizedBox(height: 12),
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(color: kSurface2, borderRadius: BorderRadius.circular(10),
-                    border: Border.all(color: kBorder)),
-                  child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                    const Text('💬 TRANSCRIPT', style: TextStyle(color: kTextDim, fontSize: 10, letterSpacing: 1)),
-                    const SizedBox(height: 6),
-                    Text(audioSummary['full_text'] as String,
-                      style: const TextStyle(color: kTextMid, fontSize: 13, height: 1.5)),
-                  ]),
-                ),
-              ],
+
             ])),
 
             // ── 장면 분석 ────────────────────────────────────

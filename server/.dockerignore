@@ -1,0 +1,34 @@
+# C:\dev\vibeview\server\.dockerignore
+
+# 환경변수 (docker-compose에서 주입)
+.env
+
+# 쿠키 (docker-compose에서 마운트)
+cookies.txt
+
+# 캐시
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# 임시 파일
+vibeview_*/
+*.tmp
+
+# 정적 프레임 (볼륨으로 관리)
+static/frames/
+
+# 가상환경
+venv/
+.venv/
+env/
+
+# Git
+.git/
+.gitignore
+
+# IDE
+.vscode/
+.idea/

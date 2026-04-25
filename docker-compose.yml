@@ -1,0 +1,69 @@
+# C:\dev\vibeview\docker-compose.yml
+
+services:
+
+  # ── PostgreSQL DB ─────────────────────────────────────────
+  db:
+    image: postgres:16-alpine
+    container_name: vibeview_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: vibeview
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d vibeview"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ── FastAPI 백엔드 ────────────────────────────────────────
+  backend:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    container_name: vibeview_backend
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgresql://postgres:${DB_PASSWORD}@db:5432/vibeview
+      GEMINI_API_KEY: ${GEMINI_API_KEY}
+      GOOGLE_API_KEY: ${GOOGLE_API_KEY}
+      YOUTUBE_API_KEY: ${YOUTUBE_API_KEY}
+    volumes:
+      # 프레임 이미지 영구 저장 (컨테이너 재시작해도 유지)
+      - frames_data:/app/static/frames
+      # 쿠키 파일 마운트
+      - ./server/cookies.txt:/app/cookies.txt
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ── React 프론트엔드 ──────────────────────────────────────
+  frontend:
+    build:
+      context: ./web
+      dockerfile: Dockerfile
+      args:
+        # 외부에서 접근하는 백엔드 주소 (Nginx가 프록시하므로 /api로 설정)
+        REACT_APP_API_BASE: ""
+    container_name: vibeview_frontend
+    restart: unless-stopped
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+
+volumes:
+  postgres_data:
+  frames_data:
