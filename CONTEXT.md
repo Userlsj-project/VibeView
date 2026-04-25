@@ -118,15 +118,38 @@
 | **모바일** | Flutter (Dart) | iOS/Android 크로스플랫폼 |
 | **웹 프론트엔드** | React + Recharts | 대시보드 시각화 |
 | **백엔드** | Python, FastAPI | REST API 서버 |
-| **AI 코치** | Gemini API (gemini-2.5-flash) | 감정 해석 + 피드백 |
-| **얼굴 분석** | MediaPipe FaceMesh | 표정 분석 |
-| **객체 감지** | YOLOv8 | 사람/동물 분류 |
-| **음성 분석** | Whisper (base) + librosa | STT + 감정 분석 |
-| **영상 분위기** | CLIP (ViT-B/32) | 장면 임베딩 |
-| **영상 처리** | OpenCV + ffmpeg + yt-dlp | 프레임 추출 + 음성 분리 |
-| **데이터** | YouTube Data API v3 | 조회수 연동 |
+| **AI 코치** | Gemini API (gemini-2.5-flash) | 텍스트 기반 감정 해석 + 피드백 (유지) |
+| **멀티모달 분석** | Claude API (예산 확보 후 교체 예정) | 프레임+음성 통합 맥락 분석 |
+| **얼굴 분석** | FER (fer==22.5.1) | 현재 임시 사용 → Claude Vision API로 교체 예정 |
+| **객체 감지** | YOLOv8 | 사람/동물 분류 (유지) |
+| **음성 분석** | Whisper (base) + librosa | STT + 감정 분석 → Claude Audio API로 교체 예정 |
+| **영상 분위기** | CLIP (ViT-B/32) | 장면 임베딩 (유지) |
+| **영상 처리** | OpenCV + ffmpeg + yt-dlp | 프레임 추출 + 음성 분리 (유지) |
+| **데이터** | YouTube Data API v3 | 조회수 연동 (유지) |
 | **DB** | PostgreSQL 16 + SQLAlchemy | 분석 결과 영구 저장 |
+| **실시간 통신** | FastAPI WebSocket (추가 예정) | 분석 진행 상황 실시간 스트리밍 |
+| **바이럴 예측 ML** | XGBoost / LightGBM (예정) | 데이터 500개+ 축적 후 직접 학습 |
 | **배포** | Docker + AWS EC2 | 컨테이너 배포 |
+
+---
+
+## AI API 역할 분리 전략 (중요)
+
+현재 FER(얼굴)과 librosa(음성)는 패키지 의존성 문제로 임시 사용 중이며,
+졸업작품 예산 확보 후 Claude API 유료 구독으로 교체 예정.
+
+| API | 역할 | 이유 |
+|-----|------|------|
+| **Gemini 2.5 flash** | AI 코치 텍스트 피드백 (현재 유지) | 텍스트 생성은 Gemini로 충분, 비용 효율적 |
+| **Claude API** | 프레임+음성 멀티모달 통합 분석 (예정) | 복잡한 맥락 추론 능력이 압도적으로 뛰어남 |
+| **Whisper base** | STT (음성→텍스트 변환) | Claude에게 텍스트로 전달하기 위해 유지 |
+| **XGBoost/LightGBM** | 바이럴 점수 예측 ML 모델 | 데이터 500개+ 수집 후 직접 학습 |
+
+**Claude API 교체 후 변화:**
+- face_analyzer.py: FER 제거 → Claude Vision API로 프레임 이미지 직접 분석
+- audio_analyzer.py: librosa 감정 분석 제거 → Claude에 Whisper STT 결과 + 음성 특징 전달
+- fusion_engine.py: 수식 기반 융합 → Claude가 맥락 이해하여 종합 판단
+- DB 초기화 필요 (교체 후 깨끗하게 시작)
 
 ---
 
@@ -138,9 +161,11 @@ GEMINI_API_KEY=발급받은키
 GOOGLE_API_KEY=발급받은키
 YOUTUBE_API_KEY=발급받은키
 DATABASE_URL=postgresql://postgres:비밀번호@localhost:5432/vibeview
+ANTHROPIC_API_KEY=발급받은키 (Claude API 구독 후 추가 예정)
 ```
 - .env 파일 내용을 절대 대화창에 붙여넣지 말 것 (보안)
 - Gemini 모델명: gemini-2.5-flash (다른 버전 사용 금지)
+- Claude 모델명: claude-sonnet-4-5 또는 claude-opus-4-5 (구독 후 확인)
 
 ### 서버 실행 방법
 ```
@@ -226,17 +251,19 @@ C:\dev\vibeview\
 │   ├── routers\
 │   │   ├── __init__.py            완료
 │   │   ├── analyze.py             완료 (전체 파이프라인 + DB 저장)
+│   │   ├── analyze_ws.py          미구현 (WebSocket 실시간 진행 상황 - 추가 예정)
 │   │   ├── coach.py               완료
 │   │   ├── trend.py               완료 (/api/trend 구현)
 │   │   └── user.py                완료 (기본 구조)
 │   ├── services\
-│   │   ├── gemini_coach.py        완료
+│   │   ├── gemini_coach.py        완료 (Gemini 텍스트 코치 - 유지)
+│   │   ├── claude_analyzer.py     미구현 (Claude 멀티모달 분석 - 예산 후 추가)
 │   │   ├── video_processor.py     완료 (프레임 영구 저장 포함)
-│   │   ├── face_analyzer.py       완료 (FER CNN 딥러닝 교체)
-│   │   ├── audio_analyzer.py      완료
-│   │   ├── scene_analyzer.py      완료 (YOLOv8 + CLIP)
-│   │   ├── fusion_engine.py       완료 (멀티모달 융합)
-│   │   ├── viral_predictor.py     완료 (바이럴 점수 예측)
+│   │   ├── face_analyzer.py       완료 (FER CNN - 임시, Claude API 교체 예정)
+│   │   ├── audio_analyzer.py      완료 (임시, Claude API 교체 예정)
+│   │   ├── scene_analyzer.py      완료 (YOLOv8 + CLIP - 유지)
+│   │   ├── fusion_engine.py       완료 (멀티모달 융합 - Claude 교체 후 개선)
+│   │   ├── viral_predictor.py     완료 (규칙 기반 - ML 모델로 교체 예정)
 │   │   └── youtube_service.py     완료 (YouTube Data API v3)
 │   └── static\
 │       └── frames\                완료 (분석된 프레임 이미지 영구 저장)
@@ -260,7 +287,8 @@ C:\dev\vibeview\
 
 | 메서드 | 경로 | 상태 | 설명 |
 |--------|------|------|------|
-| POST | /api/analyze | 완료 | 영상 분석 전체 파이프라인 + DB 저장 |
+| POST | /api/analyze | 완료 | 영상 분석 전체 파이프라인 |
+| WS | /ws/analyze | 미구현 | 실시간 분석 진행 상황 스트리밍 |
 | POST | /api/coach | 완료 | Gemini AI 코치 피드백 |
 | GET | /api/trend | 완료 | 감정 트렌드 (DB 기반) |
 | GET | /api/user | 기본 구조 | 사용자 정보 (미구현) |
@@ -306,6 +334,16 @@ C:\dev\vibeview\
     {"timestamp": float, "face_emotion": str, "face_valence": float,
      "face_count": int, "audio_emotion": str, "audio_valence": float, "audio_energy": float}
   ]
+}
+```
+
+### WebSocket /ws/analyze 메시지 구조 (구현 예정)
+```json
+{
+  "step": "downloading | face_analysis | audio_analysis | scene_analysis | fusion | done | error",
+  "progress": 0~100,
+  "message": "영상 다운로드 중...",
+  "data": null
 }
 ```
 
@@ -382,15 +420,21 @@ C:\dev\vibeview\
 - 결과 화면: 바이럴 예측 카드 (등급 뱃지, viral_score, 팩터 바, 강점/약점, 추천)
 - Gemini AI 코치 버튼 (/api/coach 연동)
 - 트렌드 화면 (/api/trend 연동, 등급분포/감정분포/상위영상/최근기록)
-- SD 수인 캐릭터 (CustomPainter, 사람 기반 백호)
+- SD 수인 캐릭터 (CustomPainter, 사람 기반 백호) → Phase 3에서 AI PNG로 교체 예정
 - 감정별 표정 5종: idle, thinking, happy, sad, surprised, angry
 - 둥실둥실 float 애니메이션 + thinking 시 빙글빙글 회전
+
+### 추가 예정 기능 (Phase 3)
+- WebSocket 연동: 분석 진행 상황 실시간 표시 (단계별 프로그레스)
+- UI/UX 전면 개편: 다크모드 기반 세련된 디자인 시스템
+- 캐릭터 교체: AI 이미지 생성으로 고퀄리티 PNG 4종 (백호/강아지/고양이/판다)
 
 ### Flutter 패키지
 ```yaml
 dependencies:
   flutter: sdk
   http: ^1.6.0
+  web_socket_channel: ^2.4.0  # WebSocket 추가 예정
 ```
 
 ### 에뮬레이터 주의사항
@@ -399,9 +443,10 @@ dependencies:
 - 실행: `flutter emulators --launch Medium_Phone`
 
 ### 캐릭터 향후 계획
-- Phase 3에서 AI 이미지로 고퀄리티 PNG 교체
+- Phase 3에서 AI 이미지(Midjourney/DALL-E)로 고퀄리티 PNG 교체
 - 캐릭터 4종 (백호/강아지/고양이/판다) 랜덤 등장
 - Image.asset()으로 교체 예정
+- Rive 애니메이션 검토 예정 (벡터 기반 부드러운 감정 애니메이션)
 
 ---
 
@@ -411,24 +456,32 @@ dependencies:
 - 분석 탭: YouTube통계, 비디오정보, 얼굴감정, 음성감정, 장면분석, 융합결과, 바이럴점수, 타임라인, AI코치
 - 트렌드 탭: 요약통계, 등급분포, 감정분포, 상위영상, 최근기록
 
+### 추가 예정 (Phase 3)
+- WebSocket 연동: 분석 중 실시간 단계별 진행 표시
+- UI 전면 개편: 카드 나열 → 스토리텔링 방식으로
+  - 히어로 카드 (썸네일 + 핵심 지표 한눈에)
+  - 감정 흐름 타임라인 애니메이션
+  - 바이럴 점수 대형 게이지 + 등급 뱃지
+  - AI 코치 핵심 조언 강조 표시
+
 ---
 
 ## 개발 로드맵
 
-### Phase 1 - 중간 발표 필수 (~ 2026년 5월)
+### Phase 1 - 중간 발표 필수 (~ 2026년 5월) ✅ 전체 완료
 
 | 단계 | 작업 | 상태 |
 |------|------|------|
 | 1-1 | FastAPI 백엔드 기본 서버 | 완료 |
 | 1-2 | 영상 처리 (yt-dlp + OpenCV) | 완료 |
-| 1-3 | 얼굴 감정 분석 (MediaPipe) | 완료 |
+| 1-3 | 얼굴 감정 분석 (FER CNN) | 완료 |
 | 1-4 | 음성 감정 분석 (Whisper + librosa) | 완료 |
 | 1-5 | Gemini AI 코치 연동 | 완료 |
 | 1-6 | React 웹 대시보드 기본 | 완료 |
 | 1-7 | 백엔드 CORS 설정 | 완료 |
 | 1-8 | Flutter 앱 기본 화면 | 완료 |
 
-### Phase 2 - 중간~최종 발표 (2026년 5월~9월)
+### Phase 2 - 중간~최종 발표 (2026년 5월~9월) ✅ 전체 완료
 
 | 단계 | 작업 | 상태 |
 |------|------|------|
@@ -445,14 +498,34 @@ dependencies:
 | 2-11 | YouTube Shorts 자동 수집 스크립트 | 완료 |
 | 2-12 | README.md (Mermaid 블록도) | 완료 |
 
-### Phase 3 - 최종 발표 준비 (2026년 8월~9월)
+### Phase 3-A - 배포 및 기반 고도화 (2026년 4~6월)
 
 | 단계 | 작업 | 상태 |
 |------|------|------|
 | 3-1 | Docker 컨테이너화 | 미완료 [다음 작업] |
 | 3-2 | AWS EC2 배포 | 미완료 |
-| 3-3 | 바이럴 예측 머신러닝 학습 | 미완료 (데이터 500개+ 필요) |
-| 3-4 | 최종 발표 자료 준비 | 미완료 |
+| 3-3 | WebSocket 실시간 분석 진행 상황 | 미완료 |
+| 3-4 | UI/UX 전면 개편 (React + Flutter) | 미완료 |
+| 3-5 | 캐릭터 AI PNG 교체 (4종) | 미완료 |
+
+### Phase 3-B - AI 고도화 (예산 확보 후, 2026년 7~8월)
+
+| 단계 | 작업 | 상태 |
+|------|------|------|
+| 3-6 | Claude API 구독 + ANTHROPIC_API_KEY .env 추가 | 미완료 |
+| 3-7 | claude_analyzer.py 구현 (멀티모달 통합 분석) | 미완료 |
+| 3-8 | face_analyzer.py → Claude Vision API로 교체 | 미완료 |
+| 3-9 | audio_analyzer.py → Claude API로 교체 | 미완료 |
+| 3-10 | fusion_engine.py → Claude 맥락 기반 융합으로 개선 | 미완료 |
+| 3-11 | DB 초기화 후 데이터 재수집 (교체 후 품질 검증) | 미완료 |
+
+### Phase 3-C - ML 및 마무리 (2026년 8~9월)
+
+| 단계 | 작업 | 상태 |
+|------|------|------|
+| 3-12 | 바이럴 예측 ML 모델 학습 (XGBoost, 데이터 500개+ 필요) | 미완료 |
+| 3-13 | viral_predictor.py → ML 모델로 교체 | 미완료 |
+| 3-14 | 최종 발표 자료 준비 | 미완료 |
 
 ---
 
@@ -461,9 +534,9 @@ dependencies:
 - [x] 개발 환경 세팅
 - [x] GitHub 저장소 연결
 - [x] FastAPI 기본 서버
-- [x] Gemini API 연동
+- [x] Gemini API 연동 (AI 코치)
 - [x] 영상 처리 파이프라인 (yt-dlp + OpenCV + ffmpeg)
-- [x] 얼굴 감정 분석 (MediaPipe FaceMesh)
+- [x] 얼굴 감정 분석 (FER CNN)
 - [x] 음성 감정 분석 (Whisper base + librosa)
 - [x] /api/analyze 완성 및 동작 확인
 - [x] /api/coach 완성 및 동작 확인
@@ -484,9 +557,14 @@ dependencies:
 - [x] FER CNN 기반 얼굴 감정 분석 교체 (MediaPipe → FER)
 - [x] YouTube Shorts 자동 수집 스크립트 (auto_collect.py)
 - [x] README.md (Mermaid 블록도 포함)
-- [ ] Docker 컨테이너화  <-- 현재 여기
-- [ ] AWS EC2 배포
-- [ ] 바이럴 예측 머신러닝 학습 (데이터 500개 이상 축적 후)
+- [ ] Docker 컨테이너화  ← 현재 여기 (3-1)
+- [ ] AWS EC2 배포 (3-2)
+- [ ] WebSocket 실시간 진행 상황 (3-3)
+- [ ] UI/UX 전면 개편 (3-4)
+- [ ] 캐릭터 AI PNG 교체 (3-5)
+- [ ] Claude API 연동 및 분석 모듈 교체 (3-6~3-11, 예산 후)
+- [ ] XGBoost 바이럴 예측 ML 학습 (3-12~3-13, 데이터 500개+ 후)
+- [ ] 최종 발표 자료 (3-14)
 
 ---
 
@@ -507,11 +585,12 @@ dependencies:
 - CONTEXT.md 전달 전 반드시 체크리스트 6개 항목 모두 검증 후 전달
 - Flutter: CustomPainter 내부 전역 k* 상수 직접 사용 불가 (static const 별칭 필요)
 - Flutter: const 위젯 안에 runtime 상수 포함 시 const 제거 필요
-- face_analyzer.py: MediaPipe 제거, FER(fer==22.5.1) 사용 중
+- face_analyzer.py: MediaPipe 제거, FER(fer==22.5.1) 사용 중 (임시 - Claude API 교체 예정)
 - mediapipe 패키지 제거됨 (protobuf 충돌로 삭제)
 - auto_collect.py: 백엔드 실행 후 별도 터미널에서 실행
 - 자동 수집은 노트북 켤 때마다 실행 권장 (하루 20~50개)
 - 자동 수집 중단: Ctrl + C (이미 완료된 데이터는 DB에 정상 저장됨)
+- Claude API 교체 전까지 FER/librosa 현행 유지, 교체 시 DB 초기화 필요
 - **DB 초기화 방법 (Claude API 교체 후 깨끗하게 시작할 때):**
 
 ```

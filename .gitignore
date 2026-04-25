@@ -1,24 +1,35 @@
 ﻿# 환경변수 & 보안파일
+.env
 server/.env
 server/cookies.txt
+web/.env
+
+# Claude Code 로컬 설정
+.claude/
 
 # Python 캐시
-server/__pycache__/
-server/routers/__pycache__/
-server/services/__pycache__/
 __pycache__/
+**/__pycache__/
 *.pyc
+*.pyo
 
 # 임시 영상 파일
 server/test_video*
 server/*.webm
 server/*.mp4
 
+# ML 모델 바이너리 (대용량)
+server/yolov8n.pt
+server/models/*.pkl
+server/models/*.pt
+
+# 생성된 프레임 이미지
+server/static/frames/
+
 # Node / React
 node_modules/
 web/node_modules/
 web/build/
-web/.env
 
 # Flutter
 mobile/.dart_tool/
